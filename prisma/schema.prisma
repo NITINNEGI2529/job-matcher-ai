@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enums
+enum Role {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  RECRUITER
+  CANDIDATE
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+// Models
+model Domain {
+  id         String   @id @default(cuid())
+  name       String
+  domainName String   @unique
+  publicKey  String?
+  signature  String?
+  verified   Boolean  @default(false)
+  disabled   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  users       User[]
+  jobs        Job[]
+  invitations Invitation[]
+  
+  @@index([domainName])
+  @@map("domains")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  role      Role     @default(CANDIDATE)
+  domainId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  domain       Domain?       @relation(fields: [domainId], references: [id])
+  applications Application[]
+  
+  @@index([clerkId])
+  @@index([email])
+  @@index([domainId])
+  @@map("users")
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  requiredSkills String[]
+  domainId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  domain       Domain        @relation(fields: [domainId], references: [id])
+  applications Application[]
+  
+  @@index([domainId])
+  @@map("jobs")
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  jobId           String
+  userId          String
+  candidateSkills String[]
+  matchingScore   Float?
+  status          ApplicationStatus @default(PENDING)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  job  Job  @relation(fields: [jobId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  
+  @@unique([jobId, userId])
+  @@index([jobId])
+  @@index([userId])
+  @@map("applications")
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String
+  role      Role     @default(RECRUITER)
+  domainId  String
+  createdAt DateTime @default(now())
+  
+  domain Domain @relation(fields: [domainId], references: [id])
+  
+  @@index([email])
+  @@index([domainId])
+  @@map("invitations")
+}

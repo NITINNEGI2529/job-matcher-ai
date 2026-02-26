@@ -1,0 +1,130 @@
+import { Webhook } from 'svix';
+import { headers } from 'next/headers';
+import { prisma } from '@/lib/prisma';
+import { handleRouteError } from '@/lib/errors';
+import { Role } from '@/generated/prisma';
+
+// Clerk webhook event types
+type WebhookEvent = {
+  type: 'user.created' | 'user.updated';
+  data: {
+    id: string;
+    email_addresses: Array<{ email_address: string }>;
+    public_metadata?: {
+      role?: 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'RECRUITER' | 'CANDIDATE';
+      domainId?: string;
+    };
+  };
+};
+
+export async function POST(req: Request) {
+  try {
+    // Get the webhook secret from environment
+    const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+    
+    if (!webhookSecret) {
+      console.error('CLERK_WEBHOOK_SECRET is not configured');
+      return Response.json(
+        { error: { code: 'CONFIGURATION_ERROR', message: 'Webhook secret not configured' } },
+        { status: 500 }
+      );
+    }
+
+    // Get the headers
+    const headerPayload = await headers();
+    const svix_id = headerPayload.get('svix-id');
+    const svix_timestamp = headerPayload.get('svix-timestamp');
+    const svix_signature = headerPayload.get('svix-signature');
+
+    // If there are no headers, error out
+    if (!svix_id || !svix_timestamp || !svix_signature) {
+      return Response.json(
+        { error: { code: 'INVALID_HEADERS', message: 'Missing svix headers' } },
+        { status: 400 }
+      );
+    }
+
+    // Get the body
+    const payload = await req.text();
+
+    // Create a new Svix instance with your webhook secret
+    const wh = new Webhook(webhookSecret);
+
+    let evt: WebhookEvent;
+
+    // Verify the webhook signature
+    try {
+      evt = wh.verify(payload, {
+        'svix-id': svix_id,
+        'svix-timestamp': svix_timestamp,
+        'svix-signature': svix_signature,
+      }) as WebhookEvent;
+    } catch (err) {
+      console.error('Error verifying webhook:', err);
+      return Response.json(
+        { error: { code: 'INVALID_SIGNATURE', message: 'Invalid webhook signature' } },
+        { status: 401 }
+      );
+    }
+
+    // Handle the webhook event
+    const { type, data } = evt;
+    const clerkId = data.id;
+    const email = data.email_addresses[0]?.email_address;
+
+    if (!email) {
+      return Response.json(
+        { error: { code: 'INVALID_PAYLOAD', message: 'Email address is required' } },
+        { status: 400 }
+      );
+    }
+
+    switch (type) {
+      case 'user.created': {
+        // Get role and domainId from public_metadata (set by Clerk invitation)
+        const role = (data.public_metadata?.role as Role) || 'CANDIDATE';
+        const domainId = data.public_metadata?.domainId || null;
+
+        // Create user in database
+        await prisma.user.create({
+          data: {
+            clerkId,
+            email,
+            role,
+            domainId,
+          },
+        });
+
+        console.log(`User created: ${email} with role ${role}, domainId: ${domainId}`);
+        break;
+      }
+
+      case 'user.updated': {
+        // Extract role and domainId from public_metadata
+        const role = data.public_metadata?.role as Role | undefined;
+        const domainId = data.public_metadata?.domainId;
+
+        // Update user in database
+        await prisma.user.update({
+          where: { clerkId },
+          data: {
+            email,
+            ...(role && { role }),
+            ...(domainId !== undefined && { domainId: domainId || null }),
+          },
+        });
+
+        console.log(`User updated: ${email}`);
+        break;
+      }
+
+      default:
+        console.log(`Unhandled webhook event type: ${type}`);
+    }
+
+    // Return success response
+    return Response.json({ success: true, message: 'Webhook processed successfully' });
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}
