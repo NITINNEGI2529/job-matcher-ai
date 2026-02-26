@@ -48,8 +48,7 @@ model Domain {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
+  id        String   @id // Clerk ID as primary key
   email     String   @unique
   role      Role     @default(CANDIDATE)
   domainId  String?
@@ -59,7 +58,6 @@ model User {
   domain       Domain?       @relation(fields: [domainId], references: [id])
   applications Application[]
   
-  @@index([clerkId])
   @@index([email])
   @@index([domainId])
   @@map("users")
@@ -84,7 +82,7 @@ model Job {
 model Application {
   id              String            @id @default(cuid())
   jobId           String
-  userId          String
+  userId          String            // References User.id (Clerk ID)
   candidateSkills String[]
   matchingScore   Float?
   status          ApplicationStatus @default(PENDING)

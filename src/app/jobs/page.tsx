@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useJobs } from '@/hooks/useJobs';
 import { useApplications } from '@/hooks/useApplications';
 import { useCurrentUser } from '@/hooks/useUsers';
@@ -215,12 +216,12 @@ function JobsListingContent() {
               const hasApplied = applications?.some(app => app.jobId === job.id);
 
               return (
-                <Card 
-                  key={job.id} 
-                  className="hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => router.push(`/jobs/${job.id}`)}
-                >
-                  <CardHeader>
+                <Link href={`/jobs/${job.id}`} key={job.id} >
+                  <Card 
+                    key={job.id} 
+                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                  >
+                    <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle className="text-lg">{job.title}</CardTitle>
                       {isCandidate && (
@@ -263,6 +264,7 @@ function JobsListingContent() {
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               );
             })}
           </div>

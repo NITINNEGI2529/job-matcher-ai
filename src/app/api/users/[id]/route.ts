@@ -12,7 +12,7 @@ import { Role } from '@/generated/prisma';
  * 
  * @param request - Request object
  * @param params - Route parameters containing user id
- * @returns User with id, clerkId, email, role, domainId, createdAt
+ * @returns User with id (Clerk ID), email, role, domainId, createdAt
  * @throws {AuthenticationError} If user is not authenticated
  * @throws {AuthorizationError} If user attempts cross-domain access
  * @throws {NotFoundError} If user is not found
@@ -30,7 +30,6 @@ export async function GET(
         where: { id },
         select: {
           id: true,
-          clerkId: true,
           email: true,
           role: true,
           domainId: true,
@@ -72,7 +71,7 @@ export async function GET(
  * 
  * @param request - Request body may contain role and domainId
  * @param params - Route parameters containing user id
- * @returns Updated user with id, clerkId, email, role, domainId, createdAt
+ * @returns Updated user with id (Clerk ID), email, role, domainId, createdAt
  * @throws {AuthenticationError} If user is not authenticated
  * @throws {AuthorizationError} If user is not Super_Admin or Company_Admin, or if promotion rules are violated
  * @throws {NotFoundError} If user is not found
@@ -195,7 +194,6 @@ export async function PATCH(
         data: updateData,
         select: {
           id: true,
-          clerkId: true,
           email: true,
           role: true,
           domainId: true,

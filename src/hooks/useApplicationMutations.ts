@@ -6,7 +6,7 @@ import type { ApplicationStatus } from '@/generated/prisma';
 interface Application {
   id: string;
   jobId: string;
-  userId: string;
+  userId: string; // Candidate's Clerk ID
   candidateSkills: string[];
   matchingScore: number | null;
   status: ApplicationStatus;

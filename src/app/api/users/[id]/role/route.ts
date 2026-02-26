@@ -87,7 +87,6 @@ export async function PATCH(
         data: { role: newRole },
         select: {
           id: true,
-          clerkId: true,
           email: true,
           role: true,
           domainId: true,

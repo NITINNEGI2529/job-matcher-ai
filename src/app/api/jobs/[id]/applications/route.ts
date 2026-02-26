@@ -67,7 +67,6 @@ export async function GET(
             select: {
               id: true,
               email: true,
-              clerkId: true,
             },
           },
         },

@@ -65,15 +65,17 @@ export default function DashboardPage() {
                   <span className="text-primary-foreground font-bold text-sm">JM</span>
                 </div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  JobMatchr
+                  Job Matcher
                 </h1>
               </div>
             </div>
             
             <div className="flex items-center gap-4">
-              <Badge variant={getRoleVariant(role)} className="hidden sm:flex">
-                {getRoleDisplay(role)}
-              </Badge>
+              {role !== 'CANDIDATE' && (
+                <Badge variant={getRoleVariant(role)} className="hidden sm:flex">
+                  {getRoleDisplay(role)}
+                </Badge>
+              )}
               <div className="text-sm text-right hidden md:block">
                 <p className="font-medium">{clerkUser?.emailAddresses[0]?.emailAddress}</p>
                 <p className="text-xs text-muted-foreground">
@@ -94,24 +96,38 @@ export default function DashboardPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">
-            Welcome back, {clerkUser?.firstName || 'User'}! 👋
-          </h2>
-          <p className="text-muted-foreground">
-            {role === 'SUPER_ADMIN' && "Manage the entire platform from here."}
-            {role === 'COMPANY_ADMIN' && "Oversee your organization and recruiting team."}
-            {role === 'RECRUITER' && "Manage your job postings and review applications."}
-            {role === 'CANDIDATE' && "Find your next opportunity and track your applications."}
-          </p>
-        </div>
+        {role === 'CANDIDATE' && !domainId ? (
+          <div className="text-center py-12">
+            <h2 className="text-3xl font-bold mb-2">
+              Welcome back, {clerkUser?.firstName || 'User'}! 👋
+            </h2>
+            <p className="text-muted-foreground">
+              Complete your profile to get started
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Welcome Section */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-2">
+                Welcome back, {clerkUser?.firstName || 'User'}! 👋
+              </h2>
+              {(role !== 'CANDIDATE') && (
+                <p className="text-muted-foreground">
+                  {role === 'SUPER_ADMIN' && "Manage the entire platform from here."}
+                  {role === 'COMPANY_ADMIN' && "Oversee your organization and recruiting team."}
+                  {role === 'RECRUITER' && "Manage your job postings and review applications."}
+                </p>
+              )}
+            </div>
 
-        {/* Role-specific Dashboard */}
-        {role === 'SUPER_ADMIN' && <SuperAdminDashboard />}
-        {role === 'COMPANY_ADMIN' && <CompanyAdminDashboard />}
-        {role === 'RECRUITER' && <RecruiterDashboard />}
-        {role === 'CANDIDATE' && <CandidateDashboard />}
+            {/* Role-specific Dashboard */}
+            {role === 'SUPER_ADMIN' && <SuperAdminDashboard />}
+            {role === 'COMPANY_ADMIN' && <CompanyAdminDashboard />}
+            {role === 'RECRUITER' && <RecruiterDashboard />}
+            {role === 'CANDIDATE' && <CandidateDashboard />}
+          </>
+        )}
       </main>
     </div>
   );

@@ -15,7 +15,7 @@ import { Role } from '@/generated/prisma';
  * - limit: Number of users per page (default: 10)
  * 
  * @param request - Request object with query parameters
- * @returns Paginated users array with id, clerkId, email, role, domainId, createdAt
+ * @returns Paginated users array with id (Clerk ID), email, role, domainId, createdAt
  * @throws {AuthenticationError} If user is not authenticated
  * @throws {ValidationError} If query parameters are invalid
  */
@@ -53,7 +53,6 @@ export async function GET(request: Request) {
         where: whereClause,
         select: {
           id: true,
-          clerkId: true,
           email: true,
           role: true,
           domainId: true,

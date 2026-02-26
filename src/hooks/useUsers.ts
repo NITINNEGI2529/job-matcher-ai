@@ -4,8 +4,7 @@ import { apiClient } from '@/lib/axios';
 type Role = 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'RECRUITER' | 'CANDIDATE';
 
 interface User {
-  id: string;
-  clerkId: string;
+  id: string; // Clerk ID
   email: string;
   role: Role;
   domainId: string | null;

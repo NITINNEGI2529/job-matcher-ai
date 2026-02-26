@@ -8,7 +8,7 @@ interface UpdateProfileRequest {
 
 interface UpdateProfileResponse {
   profile: {
-    userId: string;
+    id: string; // Candidate's Clerk ID
     skills: string[];
     applicationsUpdated: number;
   };

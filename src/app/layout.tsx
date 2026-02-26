@@ -7,7 +7,7 @@ import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'JobMatchr - AI-Powered Job Matching Platform',
+  title: 'Job Matcher - AI-Powered Job Matching Platform',
   description: 'Multi-tenant job matching platform with intelligent candidate-job matching',
 };
 

@@ -14,7 +14,7 @@ export type UserWithDomain = User & {
  * Higher-order function that enforces domain isolation for API handlers.
  * 
  * This middleware:
- * 1. Extracts the userId from Clerk authentication
+ * 1. Extracts the userId (Clerk ID) from Clerk authentication
  * 2. Fetches the user with their domain from the database
  * 3. Passes the user and domainId to the handler function
  * 
@@ -46,7 +46,7 @@ export async function withDomainIsolation<T>(
   }
   
   const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
+    where: { id: userId }, // Use Clerk ID directly
     include: { domain: true },
   });
   

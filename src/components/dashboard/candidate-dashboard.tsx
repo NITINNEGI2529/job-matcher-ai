@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,10 +44,6 @@ export function CandidateDashboard() {
     <div className="space-y-8">
       {/* Candidate Overview */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <User className="h-6 w-6 text-blue-500" />
-          <h3 className="text-2xl font-bold">Candidate Dashboard</h3>
-        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="border-blue-500/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -136,9 +133,11 @@ export function CandidateDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Search className="mr-2 h-4 w-4" />
-                  Search Jobs
+                <Button asChild variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <Link href="/jobs">
+                    <Search className="mr-2 h-4 w-4" />
+                    Search Jobs
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -156,9 +155,11 @@ export function CandidateDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Star className="mr-2 h-4 w-4" />
-                  View Matches
+                <Button asChild variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <Link href="/jobs">
+                    <Star className="mr-2 h-4 w-4" />
+                    View Matches
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -176,9 +177,11 @@ export function CandidateDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <User className="mr-2 h-4 w-4" />
-                  Edit Profile
+                <Button asChild variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <Link href="/profile">
+                    <User className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -257,7 +260,9 @@ export function CandidateDashboard() {
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No applications yet</p>
-                    <Button variant="link" className="mt-2">Browse Jobs</Button>
+                    <Button asChild variant="link" className="mt-2">
+                      <Link href="/jobs">Browse Jobs</Link>
+                    </Button>
                   </div>
                 )}
               </CardContent>

@@ -1,4 +1,4 @@
-# JobMatchr - AI-Powered Job Matching Platform
+# Job Matcher - AI-Powered Job Matching Platform
 
 > Intelligent multi-tenant job matching system with role-based access control, domain isolation, and advanced skill-based matching.
 
@@ -28,7 +28,7 @@
 
 ## 🎯 Overview
 
-JobMatchr is a comprehensive job matching platform that connects candidates with opportunities using intelligent skill-based matching. Built with enterprise-grade security, it supports multi-tenant architecture with complete domain isolation.
+Job Matcher is a comprehensive job matching platform that connects candidates with opportunities using intelligent skill-based matching. Built with enterprise-grade security, it supports multi-tenant architecture with complete domain isolation.
 
 **Key Capabilities**:
 - Smart skill-based matching with 0-100% compatibility scores
@@ -112,13 +112,13 @@ createdAt: DateTime
 
 ### User (Team Member)
 ```typescript
-id: string                   // Unique identifier
-clerkId: string             // Clerk auth ID
+id: string                   // Clerk ID (primary key)
 email: string               // Unique email
 role: Role                  // SUPER_ADMIN | COMPANY_ADMIN | RECRUITER | CANDIDATE
 domainId: string | null     // Organization (null for CANDIDATE/SUPER_ADMIN)
 applications: Application[]
 createdAt: DateTime
+updatedAt: DateTime
 ```
 
 ### Job (Posting)
@@ -137,7 +137,7 @@ updatedAt: DateTime
 ```typescript
 id: string
 jobId: string                    // Which job
-userId: string                   // Which candidate
+userId: string                   // Which candidate (Clerk ID)
 candidateSkills: string[]        // Skills at application time
 matchingScore: number | null     // 0-100% compatibility
 status: PENDING | REVIEWED | ACCEPTED | REJECTED
@@ -419,7 +419,8 @@ curl -X POST http://localhost:3000/api/jobs \
 ## 📊 Performance
 
 ### Database
-- Indexes on: `clerkId`, `email`, `domainId`, `jobId`, `userId`
+- Indexes on: `email`, `domainId`, `jobId`, `userId` (Clerk ID), `createdAt`
+- Primary key: `id` (Clerk ID) on User model
 - Pagination: max 100 per page
 - Selective field selection (avoid N+1)
 

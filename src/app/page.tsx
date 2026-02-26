@@ -8,7 +8,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            JobMatchr
+            Job Matcher
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
             AI-Powered Job Matching Platform
@@ -72,7 +72,7 @@ export default function Home() {
             <CardHeader>
               <CardTitle>Ready to get started?</CardTitle>
               <CardDescription>
-                Join JobMatchr today and experience the future of job matching
+                Join Job Matcher today and experience the future of job matching
               </CardDescription>
             </CardHeader>
             <CardContent>

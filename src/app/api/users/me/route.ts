@@ -6,7 +6,7 @@ import { handleRouteError } from '@/lib/errors';
  * 
  * Fetches the authenticated user's profile with domain information.
  * 
- * @returns User object with id, clerkId, email, role, domainId, createdAt, and domain details
+ * @returns User object with id (Clerk ID), email, role, domainId, createdAt, and domain details
  * @throws {AuthenticationError} If user is not authenticated
  * @throws {NotFoundError} If user is not found in database
  */
@@ -17,8 +17,7 @@ export async function GET() {
       // The user object from withDomainIsolation already includes the domain
       return Response.json({
         user: {
-          id: user.id,
-          clerkId: user.clerkId,
+          id: user.id, // This is the Clerk ID
           email: user.email,
           role: user.role,
           domainId: user.domainId,

@@ -69,7 +69,8 @@ export async function POST(req: Request) {
 
     // Handle the webhook event
     const { type, data } = evt;
-    const clerkId = data.id;
+    const clerkId = data.id; // This is the Clerk ID, used as primary key
+
     const email = data.email_addresses[0]?.email_address;
 
     if (!email) {
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
         // Create user in database
         await prisma.user.create({
           data: {
-            clerkId,
+            id: clerkId, // Use Clerk ID as primary key
             email,
             role,
             domainId,
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
 
         // Update user in database
         await prisma.user.update({
-          where: { clerkId },
+          where: { id: clerkId }, // Use Clerk ID directly
           data: {
             email,
             ...(role && { role }),

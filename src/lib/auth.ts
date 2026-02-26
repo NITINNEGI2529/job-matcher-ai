@@ -37,9 +37,9 @@ export async function getAuthenticatedUser(): Promise<User> {
     throw new AuthenticationError('No valid session found');
   }
   
-  // Fetch user from database with domain relation
+  // Fetch user from database with domain relation (use Clerk ID directly)
   const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
+    where: { id: userId }, // Use Clerk ID directly as primary key
     include: { domain: true },
   });
   
