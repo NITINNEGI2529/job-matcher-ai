@@ -33,7 +33,6 @@ export async function GET(
           id: true,
           jobId: true,
           userId: true,
-          candidateSkills: true,
           matchingScore: true,
           status: true,
           createdAt: true,
@@ -53,6 +52,7 @@ export async function GET(
               id: true,
               email: true,
               role: true,
+              skills: true,
             },
           },
         },
@@ -68,7 +68,7 @@ export async function GET(
         user.role === Role.RECRUITER || 
         user.role === Role.COMPANY_ADMIN;
       const isSuperAdmin = user.role === Role.SUPER_ADMIN;
-      const isInSameDomain = application.job.domainId === domainId;
+      const isInSameDomain = application.job?.domainId === domainId;
       
       // Authorization logic:
       // - Application owner can view their own application
@@ -162,7 +162,6 @@ export async function PATCH(
           id: true,
           jobId: true,
           userId: true,
-          candidateSkills: true,
           matchingScore: true,
           status: true,
           createdAt: true,

@@ -58,7 +58,6 @@ export async function GET(
           id: true,
           jobId: true,
           userId: true,
-          candidateSkills: true,
           matchingScore: true,
           status: true,
           createdAt: true,
@@ -67,6 +66,7 @@ export async function GET(
             select: {
               id: true,
               email: true,
+              skills: true,
             },
           },
         },

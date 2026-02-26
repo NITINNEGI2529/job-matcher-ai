@@ -60,7 +60,6 @@ export async function GET(request: Request) {
           id: true,
           jobId: true,
           userId: true,
-          candidateSkills: true,
           matchingScore: true,
           status: true,
           createdAt: true,
@@ -79,6 +78,7 @@ export async function GET(request: Request) {
               id: true,
               email: true,
               role: true,
+              skills: true,
             },
           },
         },
@@ -114,17 +114,18 @@ export async function GET(request: Request) {
  * 
  * Creates a new job application for a candidate.
  * - Only Candidates can create applications
- * - Validates request body has jobId and candidateSkills
+ * - Validates request body has jobId
+ * - Uses candidate's skills from User model
  * - Checks for duplicate application (unique constraint on jobId + userId)
  * - Fetches job to get requiredSkills
  * - Calculates matching score using calculateMatchingScore
- * - Creates application with candidateSkills, matchingScore, status=PENDING
+ * - Creates application with matchingScore, status=PENDING
  * 
- * @param request - Request object with body { jobId: string, candidateSkills: string[] }
- * @returns Created application with id, jobId, userId, candidateSkills, matchingScore, status, createdAt
+ * @param request - Request object with body { jobId: string }
+ * @returns Created application with id, jobId, userId, matchingScore, status, createdAt
  * @throws {AuthenticationError} If user is not authenticated
  * @throws {AuthorizationError} If user is not a Candidate
- * @throws {ValidationError} If request body is invalid or duplicate application exists
+ * @throws {ValidationError} If request body is invalid or duplicate application exists or user has no skills
  * @throws {NotFoundError} If job is not found
  */
 export async function POST(request: Request) {
@@ -137,19 +138,23 @@ export async function POST(request: Request) {
       
       // Parse and validate request body
       const body = await request.json();
-      const { jobId, candidateSkills } = body;
+      const { jobId } = body;
       
       if (!jobId || typeof jobId !== 'string') {
         throw new ValidationError('jobId is required and must be a string');
       }
       
-      if (!Array.isArray(candidateSkills) || candidateSkills.length === 0) {
-        throw new ValidationError('candidateSkills is required and must be a non-empty array');
+      // Get user's skills from User model
+      const userWithSkills = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { skills: true },
+      });
+      
+      if (!userWithSkills || !userWithSkills.skills || userWithSkills.skills.length === 0) {
+        throw new ValidationError('Please add skills to your profile before applying to jobs');
       }
       
-      if (!candidateSkills.every(skill => typeof skill === 'string')) {
-        throw new ValidationError('All candidateSkills must be strings');
-      }
+      const candidateSkills = userWithSkills.skills;
       
       // Check for duplicate application
       const existingApplication = await prisma.application.findUnique({
@@ -189,7 +194,6 @@ export async function POST(request: Request) {
         data: {
           jobId,
           userId: user.id,
-          candidateSkills,
           matchingScore: matchingResult.score,
           status: 'PENDING',
         },
@@ -197,7 +201,6 @@ export async function POST(request: Request) {
           id: true,
           jobId: true,
           userId: true,
-          candidateSkills: true,
           matchingScore: true,
           status: true,
           createdAt: true,

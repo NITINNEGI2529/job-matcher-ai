@@ -109,7 +109,6 @@ export async function PATCH(
           id: true,
           jobId: true,
           userId: true,
-          candidateSkills: true,
           matchingScore: true,
           status: true,
           createdAt: true,

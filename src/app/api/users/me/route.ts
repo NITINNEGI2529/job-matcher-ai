@@ -21,7 +21,9 @@ export async function GET() {
           email: user.email,
           role: user.role,
           domainId: user.domainId,
+          skills: user.skills,
           createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
           domain: user.domain,
         },
       });

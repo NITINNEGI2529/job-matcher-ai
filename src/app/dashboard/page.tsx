@@ -13,7 +13,6 @@ export default function DashboardPage() {
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
 
   const role = currentUser?.role || 'CANDIDATE';
-  const domainId = currentUser?.domainId;
 
   if (userLoading) {
     return (
@@ -32,38 +31,25 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
       <main className="container mx-auto px-4 py-8">
-        {role === 'CANDIDATE' && !domainId ? (
-          <div className="text-center py-12">
-            <h2 className="text-3xl font-bold mb-2">
-              Welcome back, {clerkUser?.firstName || 'User'}! 👋
-            </h2>
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold mb-2">
+            Welcome back, {clerkUser?.firstName || 'User'}! 👋
+          </h2>
+          {(role !== 'CANDIDATE') && (
             <p className="text-muted-foreground">
-              Complete your profile to get started
+              {role === 'SUPER_ADMIN' && "Manage the entire platform from here."}
+              {role === 'COMPANY_ADMIN' && "Oversee your organization and recruiting team."}
+              {role === 'RECRUITER' && "Manage your job postings and review applications."}
             </p>
-          </div>
-        ) : (
-          <>
-            {/* Welcome Section */}
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2">
-                Welcome back, {clerkUser?.firstName || 'User'}! 👋
-              </h2>
-              {(role !== 'CANDIDATE') && (
-                <p className="text-muted-foreground">
-                  {role === 'SUPER_ADMIN' && "Manage the entire platform from here."}
-                  {role === 'COMPANY_ADMIN' && "Oversee your organization and recruiting team."}
-                  {role === 'RECRUITER' && "Manage your job postings and review applications."}
-                </p>
-              )}
-            </div>
+          )}
+        </div>
 
-            {/* Role-specific Dashboard */}
-            {role === 'SUPER_ADMIN' && <SuperAdminDashboard />}
-            {role === 'COMPANY_ADMIN' && <CompanyAdminDashboard />}
-            {role === 'RECRUITER' && <RecruiterDashboard />}
-            {role === 'CANDIDATE' && <CandidateDashboard />}
-          </>
-        )}
+        {/* Role-specific Dashboard */}
+        {role === 'SUPER_ADMIN' && <SuperAdminDashboard />}
+        {role === 'COMPANY_ADMIN' && <CompanyAdminDashboard />}
+        {role === 'RECRUITER' && <RecruiterDashboard />}
+        {role === 'CANDIDATE' && <CandidateDashboard />}
       </main>
     </div>
   );

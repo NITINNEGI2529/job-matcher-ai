@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { UserButton } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export function SiteHeader() {
   const { isSignedIn } = useUser();
@@ -14,9 +15,7 @@ export function SiteHeader() {
       <div className="container mx-auto px-4 flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">JM</span>
-            </div>
+            <Image src="/favicon-32x32.png" alt="Job Matcher Logo" width={32} height={32} />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Job Matcher
             </span>

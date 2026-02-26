@@ -10,8 +10,8 @@ import { Role } from '@/generated/prisma';
  * Updates a candidate's profile skills and recalculates matching scores for all applications.
  * - Only candidates can update their own profile
  * - Validates at least one skill is provided
- * - Updates user's candidateSkills in all applications
- * - Recalculates matching scores for all user's applications
+ * - Updates user's skills in the User model
+ * - Recalculates matching scores for all user's applications using the updated skills
  * 
  * Requirements: 2.3, 2.4, 2.5
  * 
@@ -54,9 +54,13 @@ export async function PATCH(request: Request) {
         throw new ValidationError('At least one non-empty skill is required');
       }
       
-      // Requirement 2.4: Update candidate skills in all applications
-      // Requirement 2.5: Recalculate matching scores for all user's applications
+      // Update user's skills in the User model
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { skills: trimmedSkills },
+      });
       
+      // Requirement 2.4: Recalculate matching scores for all user's applications
       // Fetch all user's applications with job details
       const applications = await prisma.application.findMany({
         where: { userId: user.id },
@@ -69,7 +73,7 @@ export async function PATCH(request: Request) {
         },
       });
       
-      // Update each application with new skills and recalculated matching score
+      // Update each application with recalculated matching score based on user's new skills
       await Promise.all(
         applications.map(async (application) => {
           const matchingResult = calculateMatchingScore({
@@ -80,7 +84,6 @@ export async function PATCH(request: Request) {
           return prisma.application.update({
             where: { id: application.id },
             data: {
-              candidateSkills: trimmedSkills,
               matchingScore: matchingResult.score,
             },
           });

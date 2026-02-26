@@ -33,15 +33,11 @@ function JobsListingContent() {
 
   const isCandidate = currentUser?.role === 'CANDIDATE';
 
-  // Get candidate skills from their most recent application
+  // Get candidate skills from user profile
   const candidateSkills = useMemo(() => {
-    if (!isCandidate || !applications || applications.length === 0) return [];
-    // Get skills from the most recent application
-    const sortedApps = [...applications].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    return sortedApps[0]?.candidateSkills || [];
-  }, [applications, isCandidate]);
+    if (!isCandidate || !currentUser) return [];
+    return currentUser.skills || [];
+  }, [currentUser, isCandidate]);
 
   // Filter and calculate matching scores
   const processedJobs = useMemo(() => {

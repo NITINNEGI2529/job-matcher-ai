@@ -52,6 +52,7 @@ model User {
   email     String   @unique
   role      Role     @default(CANDIDATE)
   domainId  String?
+  skills    String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -80,14 +81,13 @@ model Job {
 }
 
 model Application {
-  id              String            @id @default(cuid())
-  jobId           String
-  userId          String            // References User.id (Clerk ID)
-  candidateSkills String[]
-  matchingScore   Float?
-  status          ApplicationStatus @default(PENDING)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  jobId         String
+  userId        String            // References User.id (Clerk ID)
+  matchingScore Float?
+  status        ApplicationStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   
   job  Job  @relation(fields: [jobId], references: [id])
   user User @relation(fields: [userId], references: [id])

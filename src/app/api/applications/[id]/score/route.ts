@@ -36,11 +36,15 @@ export async function GET(
         select: {
           id: true,
           userId: true,
-          candidateSkills: true,
           job: {
             select: {
               requiredSkills: true,
               domainId: true,
+            },
+          },
+          user: {
+            select: {
+              skills: true,
             },
           },
         },
@@ -56,7 +60,7 @@ export async function GET(
         user.role === Role.RECRUITER || 
         user.role === Role.COMPANY_ADMIN;
       const isSuperAdmin = user.role === Role.SUPER_ADMIN;
-      const isInSameDomain = application.job.domainId === domainId;
+      const isInSameDomain = application.job?.domainId === domainId;
       
       // Authorization logic:
       // - Application owner can view their own score
@@ -68,17 +72,17 @@ export async function GET(
         }
       }
       
-      // Recalculate matching score
+      // Recalculate matching score using user's skills
       const matchingResult = calculateMatchingScore({
-        candidateSkills: application.candidateSkills,
-        requiredSkills: application.job.requiredSkills,
+        candidateSkills: application.user?.skills || [],
+        requiredSkills: application.job?.requiredSkills || [],
       });
       
       return Response.json({
         applicationId: application.id,
         matchingScore: matchingResult.score,
         commonSkills: matchingResult.commonSkills,
-        totalRequiredSkills: application.job.requiredSkills.length,
+        totalRequiredSkills: application.job?.requiredSkills.length || 0,
       });
     });
   } catch (error) {

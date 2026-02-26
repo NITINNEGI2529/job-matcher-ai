@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useJobs } from '@/hooks/useJobs';
 import { useApplications } from '@/hooks/useApplications';
 import { useCurrentUser } from '@/hooks/useUsers';
+import { useUpdateProfile } from '@/hooks/useProfileMutations';
+import { useState } from 'react';
 import { 
   Briefcase, 
   FileText, 
@@ -18,15 +21,22 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Star
+  Star,
+  Plus,
+  X
 } from 'lucide-react';
 
 export function CandidateDashboard() {
   const { data: currentUser } = useCurrentUser();
   const { data: jobs, isLoading: jobsLoading } = useJobs();
   const { data: applications, isLoading: applicationsLoading } = useApplications();
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
+
+  const [skills, setSkills] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState('');
 
   const myApplications = applications?.filter(app => app.userId === currentUser?.id) || [];
+  const hasSkills = currentUser?.skills && currentUser.skills.length > 0;
   
   const stats = {
     availableJobs: jobs?.length || 0,
@@ -39,6 +49,98 @@ export function CandidateDashboard() {
       ? Math.round(myApplications.reduce((acc, app) => acc + (app.matchingScore || 0), 0) / myApplications.length)
       : 0,
   };
+
+  const handleAddSkill = () => {
+    const trimmedSkill = newSkill.trim();
+    if (trimmedSkill && !skills.includes(trimmedSkill)) {
+      setSkills([...skills, trimmedSkill]);
+      setNewSkill('');
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSkill();
+    }
+  };
+
+  const handleSaveSkills = () => {
+    if (skills.length === 0) return;
+    updateProfile({ skills });
+  };
+
+  // Show prompt to add skills if user has no skills
+  if (!hasSkills) {
+    return (
+      <div className="space-y-8">
+        <Card className="border-blue-500/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <User className="h-5 w-5 text-blue-500" />
+              </div>
+              <CardTitle>Add Your Skills to Get Started</CardTitle>
+            </div>
+            <CardDescription>
+              Tell us about your skills to get personalized job recommendations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g., React, Node.js, Python..."
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isPending}
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddSkill}
+                  disabled={!newSkill.trim() || isPending}
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {skills.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill) => (
+                    <Badge key={skill} variant="secondary" className="px-3 py-1">
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)}
+                        disabled={isPending}
+                        className="ml-2 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Button 
+              onClick={handleSaveSkills} 
+              disabled={skills.length === 0 || isPending}
+              className="w-full"
+            >
+              Save Skills and Continue
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

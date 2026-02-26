@@ -1,27 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/axios';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import type { ApplicationStatus } from '@/generated/prisma';
-
-interface Application {
-  id: string;
-  jobId: string;
-  userId: string; // Candidate's Clerk ID
-  candidateSkills: string[];
-  matchingScore: number | null;
-  status: ApplicationStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Application, ApplicationStatus } from '@/generated/prisma';
 
 interface CreateApplicationRequest {
   jobId: string;
-  candidateSkills: string[];
 }
 
 /**
  * Hook for creating a new job application
  * - Calls POST /api/applications
+ * - Uses candidate's skills from their profile
  * - Invalidates applications query cache on success
  * - Shows success toast on completion
  * - Returns error state for form display

@@ -1,34 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/axios';
+import type { Application, ApplicationStatus, Job, User } from '@/generated/prisma';
 
-type ApplicationStatus = 'PENDING' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED';
-
-interface Application {
-  id: string;
-  jobId: string;
-  userId: string;
-  candidateSkills: string[];
-  matchingScore: number | null;
-  status: ApplicationStatus;
-  createdAt: string;
-  updatedAt: string;
-  job?: {
-    id: string;
-    title: string;
-    description: string;
-    requiredSkills: string[];
-    domainId: string;
-  };
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
-}
+// API response types that extend Prisma types with relations
+type ApplicationWithRelations = Application & {
+  job?: Pick<Job, 'id' | 'title' | 'description' | 'requiredSkills' | 'domainId'>;
+  user?: Pick<User, 'id' | 'email' | 'role' | 'skills'>;
+};
 
 interface CreateApplicationRequest {
   jobId: string;
-  candidateSkills: string[];
 }
 
 interface UpdateApplicationRequest {
@@ -47,7 +28,7 @@ export function useCreateApplication() {
   
   return useMutation({
     mutationFn: async (applicationData: CreateApplicationRequest) => {
-      const { data } = await apiClient.post<{ application: Application }>('/applications', applicationData);
+      const { data } = await apiClient.post<{ application: ApplicationWithRelations }>('/applications', applicationData);
       return data.application;
     },
     onSuccess: (data) => {
@@ -61,7 +42,7 @@ export function useApplication(id: string) {
   return useQuery({
     queryKey: ['applications', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ application: Application }>(`/applications/${id}`);
+      const { data } = await apiClient.get<{ application: ApplicationWithRelations }>(`/applications/${id}`);
       return data.application;
     },
     enabled: !!id,
@@ -73,7 +54,7 @@ export function useUpdateApplication() {
   
   return useMutation({
     mutationFn: async ({ id, ...updateData }: UpdateApplicationRequest & { id: string }) => {
-      const { data } = await apiClient.patch<{ application: Application }>(`/applications/${id}`, updateData);
+      const { data } = await apiClient.patch<{ application: ApplicationWithRelations }>(`/applications/${id}`, updateData);
       return data.application;
     },
     onSuccess: (data) => {
@@ -98,7 +79,7 @@ export function useApplications() {
   return useQuery({
     queryKey: ['applications'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ applications: Application[] }>('/applications');
+      const { data } = await apiClient.get<{ applications: ApplicationWithRelations[] }>('/applications');
       return data.applications;
     },
   });

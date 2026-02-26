@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useUsers';
-import { useApplications } from '@/hooks/useApplications';
 import { useUpdateProfile } from '@/hooks/useProfileMutations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,6 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
   const router = useRouter();
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
-  const { data: applications, isLoading: applicationsLoading } = useApplications();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
   
   const [skills, setSkills] = useState<string[]>([]);
@@ -38,20 +36,17 @@ export default function ProfilePage() {
     },
   });
 
-  // Load skills from most recent application
+  // Load skills from user profile
   useEffect(() => {
-    if (applications && applications.length > 0 && skills.length === 0) {
-      const sortedApplications = [...applications].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      const mostRecentSkills = sortedApplications[0].candidateSkills;
-      // Use a callback to avoid cascading renders
-      setTimeout(() => {
-        setSkills(mostRecentSkills);
-        form.setValue('skills', mostRecentSkills);
+    if (currentUser?.skills && skills.length === 0) {
+      // Use setTimeout to avoid setState in effect warning
+      const timer = setTimeout(() => {
+        setSkills(currentUser.skills);
+        form.setValue('skills', currentUser.skills);
       }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [applications, form, skills.length]);
+  }, [currentUser?.skills, form, skills.length]);
 
   const handleAddSkill = () => {
     const trimmedSkill = newSkill.trim();
@@ -76,9 +71,14 @@ export default function ProfilePage() {
     }
   };
 
-  const onSubmit = (data: ProfileFormValues) => {
+  const onSubmit = () => {
+    if (skills.length === 0) {
+      form.setError('skills', { message: 'At least one skill is required' });
+      return;
+    }
+    
     updateProfile(
-      { skills: data.skills },
+      { skills: skills },
       {
         onSuccess: () => {
           router.push('/dashboard');
@@ -87,7 +87,7 @@ export default function ProfilePage() {
     );
   };
 
-  if (userLoading || applicationsLoading) {
+  if (userLoading) {
     return (
       <div className="container mx-auto py-8">
         <Card>

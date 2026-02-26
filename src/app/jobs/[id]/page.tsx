@@ -30,14 +30,11 @@ export default function JobDetailPage() {
     return applications?.some(app => app.jobId === jobId);
   }, [applications, jobId]);
 
-  // Get candidate skills from their most recent application
+  // Get candidate skills from user profile
   const candidateSkills = useMemo(() => {
-    if (!isCandidate || !applications || applications.length === 0) return [];
-    const sortedApps = [...applications].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    return sortedApps[0]?.candidateSkills || [];
-  }, [applications, isCandidate]);
+    if (!isCandidate || !currentUser) return [];
+    return currentUser.skills || [];
+  }, [currentUser, isCandidate]);
 
   // Calculate matching score
   const matchingResult = useMemo(() => {
@@ -49,11 +46,15 @@ export default function JobDetailPage() {
   }, [isCandidate, job, candidateSkills]);
 
   const handleApply = () => {
-    if (!jobId || candidateSkills.length === 0) return;
+    if (!jobId) return;
+    
+    if (candidateSkills.length === 0) {
+      router.push('/profile');
+      return;
+    }
     
     createApplication({
       jobId,
-      candidateSkills,
     });
   };
 
@@ -133,7 +134,7 @@ export default function JobDetailPage() {
               <div className="flex flex-wrap gap-2">
                 {job.requiredSkills.map((skill, idx) => {
                   const isMatched = isCandidate && candidateSkills.some(
-                    cs => cs.toLowerCase() === skill.toLowerCase()
+                    (cs: string) => cs.toLowerCase() === skill.toLowerCase()
                   );
                   return (
                     <Badge 

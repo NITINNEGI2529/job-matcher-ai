@@ -1,16 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/axios';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  requiredSkills: string[];
-  domainId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Job } from '@/generated/prisma';
 
 interface CreateJobRequest {
   title: string;

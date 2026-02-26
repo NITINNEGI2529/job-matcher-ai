@@ -1,16 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/axios';
-
-type Role = 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'RECRUITER' | 'CANDIDATE';
-
-interface User {
-  id: string; // Clerk ID
-  email: string;
-  role: Role;
-  domainId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { User, Role } from '@/generated/prisma';
 
 interface UpdateUserRequest {
   role?: Role;

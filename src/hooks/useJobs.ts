@@ -1,33 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/axios';
+import type { Job, Application, User } from '@/generated/prisma';
 
-type ApplicationStatus = 'PENDING' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  requiredSkills: string[];
-  domainId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Application {
-  id: string;
-  jobId: string;
-  userId: string;
-  candidateSkills: string[];
-  matchingScore: number | null;
-  status: ApplicationStatus;
-  createdAt: string;
-  updatedAt: string;
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
-}
+// API response types that extend Prisma types with relations
+type ApplicationWithUser = Application & {
+  user?: Pick<User, 'id' | 'email' | 'role'>;
+};
 
 interface CreateJobRequest {
   title: string;
@@ -109,7 +87,7 @@ export function useJobApplications(jobId: string) {
   return useQuery({
     queryKey: ['jobs', jobId, 'applications'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ applications: Application[] }>(`/jobs/${jobId}/applications`);
+      const { data } = await apiClient.get<{ applications: ApplicationWithUser[] }>(`/jobs/${jobId}/applications`);
       return data.applications;
     },
     enabled: !!jobId,
