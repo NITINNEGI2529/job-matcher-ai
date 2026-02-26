@@ -3,7 +3,6 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
-import { SiteHeader } from '@/components/site-header';
 
 export const metadata: Metadata = {
   title: 'Job Matcher - AI-Powered Job Matching Platform',
@@ -24,10 +23,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Providers>
-            <SiteHeader />
-            {children}
-          </Providers>
+          <Providers>{children}</Providers>
           <Toaster />
         </ThemeProvider>
       </body>

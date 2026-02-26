@@ -11,9 +11,9 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container mx-auto px-4 flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">JM</span>
             </div>
@@ -24,7 +24,7 @@ export function SiteHeader() {
         </div>
 
         <nav className="flex items-center gap-4">
-          {isSignedIn ? (
+          {isSignedIn && (
             <>
               <Button variant="ghost" asChild>
                 <Link href="/dashboard">Dashboard</Link>
@@ -37,16 +37,6 @@ export function SiteHeader() {
               </Button>
               <ThemeToggle />
               <UserButton afterSignOutUrl="/" />
-            </>
-          ) : (
-            <>
-              <ThemeToggle />
-              <Button variant="ghost" asChild>
-                <Link href="/sign-in">Sign In</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/sign-up">Sign Up</Link>
-              </Button>
             </>
           )}
         </nav>

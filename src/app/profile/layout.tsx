@@ -1,3 +1,5 @@
+import { SiteHeader } from '@/components/site-header';
+
 // Force dynamic rendering for profile page
 export const dynamic = 'force-dynamic';
 
@@ -6,5 +8,10 @@ export default function ProfileLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <SiteHeader />
+      {children}
+    </>
+  );
 }
