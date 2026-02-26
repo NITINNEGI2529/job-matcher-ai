@@ -9,6 +9,7 @@ import { SuperAdminDashboard } from '@/components/dashboard/super-admin-dashboar
 import { CompanyAdminDashboard } from '@/components/dashboard/company-admin-dashboard';
 import { RecruiterDashboard } from '@/components/dashboard/recruiter-dashboard';
 import { CandidateDashboard } from '@/components/dashboard/candidate-dashboard';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DashboardPage() {
   const { user: clerkUser } = useUser();
@@ -82,6 +83,7 @@ export default function DashboardPage() {
                   {domainId ? `Domain: ${domainId.slice(0, 8)}...` : 'No organization'}
                 </p>
               </div>
+              <ThemeToggle />
               <UserButton 
                 afterSignOutUrl="/"
                 appearance={{

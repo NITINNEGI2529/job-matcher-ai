@@ -1,8 +1,10 @@
 'use client';
 
 import { ClerkProvider } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useTheme } from 'next-themes';
 import { useState } from 'react';
 
 interface ProvidersProps {
@@ -10,6 +12,7 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  const { resolvedTheme } = useTheme();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -24,7 +27,11 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        baseTheme: resolvedTheme === 'dark' ? dark : undefined,
+      }}
+    >
       <QueryClientProvider client={queryClient}>
         {children}
         {process.env.NODE_ENV === 'development' && <ReactQueryDevtools />}
