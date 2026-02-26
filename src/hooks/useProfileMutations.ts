@@ -35,6 +35,7 @@ export function useUpdateProfile() {
       // Invalidate profile and applications query cache to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['applications'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
       
       // Show success toast
       showSuccessToast('Profile updated successfully');

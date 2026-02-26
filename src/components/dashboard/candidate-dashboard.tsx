@@ -11,7 +11,7 @@ import { useJobs } from '@/hooks/useJobs';
 import { useApplications } from '@/hooks/useApplications';
 import { useCurrentUser } from '@/hooks/useUsers';
 import { useUpdateProfile } from '@/hooks/useProfileMutations';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Briefcase, 
   FileText, 
@@ -34,6 +34,19 @@ export function CandidateDashboard() {
 
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
+  const prevSkillsRef = useRef<string>('');
+
+  // Update local state when currentUser changes
+  useEffect(() => {
+    const currentSkillsStr = JSON.stringify(currentUser?.skills || []);
+    if (currentUser?.skills && currentSkillsStr !== prevSkillsRef.current) {
+      prevSkillsRef.current = currentSkillsStr;
+      // Use queueMicrotask to defer state update
+      queueMicrotask(() => {
+        setSkills(currentUser.skills);
+      });
+    }
+  }, [currentUser?.skills]);
 
   const myApplications = applications?.filter(app => app.userId === currentUser?.id) || [];
   const hasSkills = currentUser?.skills && currentUser.skills.length > 0;
@@ -222,71 +235,71 @@ export function CandidateDashboard() {
 
         <TabsContent value="jobs" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                    <Search className="h-5 w-5 text-blue-500" />
+            <Link href="/jobs">
+              <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                      <Search className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <CardTitle className="text-lg">Browse Jobs</CardTitle>
                   </div>
-                  <CardTitle className="text-lg">Browse Jobs</CardTitle>
-                </div>
-                <CardDescription>
-                  Find jobs matching your skills
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Link href="/jobs">
-                    <Search className="mr-2 h-4 w-4" />
+                  <CardDescription>
+                    Find jobs matching your skills
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full py-2 px-4 rounded-md border border-input bg-background text-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <Search className="inline-block mr-2 h-4 w-4" />
                     Search Jobs
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                    <Star className="h-5 w-5 text-blue-500" />
                   </div>
-                  <CardTitle className="text-lg">Recommended</CardTitle>
-                </div>
-                <CardDescription>
-                  Jobs matched to your profile
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Link href="/jobs">
-                    <Star className="mr-2 h-4 w-4" />
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/jobs">
+              <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                      <Star className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <CardTitle className="text-lg">Recommended</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Jobs matched to your profile
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full py-2 px-4 rounded-md border border-input bg-background text-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <Star className="inline-block mr-2 h-4 w-4" />
                     View Matches
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                    <User className="h-5 w-5 text-blue-500" />
                   </div>
-                  <CardTitle className="text-lg">My Profile</CardTitle>
-                </div>
-                <CardDescription>
-                  Update skills and experience
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" className="w-full group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Link href="/profile">
-                    <User className="mr-2 h-4 w-4" />
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/profile">
+              <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                      <User className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <CardTitle className="text-lg">My Profile</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Update skills and experience
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full py-2 px-4 rounded-md border border-input bg-background text-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <User className="inline-block mr-2 h-4 w-4" />
                     Edit Profile
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </TabsContent>
 

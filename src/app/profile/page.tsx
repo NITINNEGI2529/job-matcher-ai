@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useUsers';
 import { useUpdateProfile } from '@/hooks/useProfileMutations';
@@ -28,6 +28,7 @@ export default function ProfilePage() {
   
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
+  const prevSkillsRef = useRef<string>('');
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -36,17 +37,18 @@ export default function ProfilePage() {
     },
   });
 
-  // Load skills from user profile
+  // Update local state when currentUser changes
   useEffect(() => {
-    if (currentUser?.skills && skills.length === 0) {
-      // Use setTimeout to avoid setState in effect warning
-      const timer = setTimeout(() => {
+    const currentSkillsStr = JSON.stringify(currentUser?.skills || []);
+    if (currentUser?.skills && currentSkillsStr !== prevSkillsRef.current) {
+      prevSkillsRef.current = currentSkillsStr;
+      // Use queueMicrotask to defer state update
+      queueMicrotask(() => {
         setSkills(currentUser.skills);
-        form.setValue('skills', currentUser.skills);
-      }, 0);
-      return () => clearTimeout(timer);
+        form.reset({ skills: currentUser.skills });
+      });
     }
-  }, [currentUser?.skills, form, skills.length]);
+  }, [currentUser?.skills, form]);
 
   const handleAddSkill = () => {
     const trimmedSkill = newSkill.trim();
