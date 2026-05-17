@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUsers } from '@/hooks/useUsers';
 import { useJobs } from '@/hooks/useJobs';
 import { useApplications } from '@/hooks/useApplications';
+import Link from 'next/link';
 import { 
   Users, 
   Briefcase, 
@@ -140,9 +141,11 @@ export function CompanyAdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Users className="mr-2 h-4 w-4" />
-                  View Team
+                <Button asChild variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Link href="/users">
+                    <Users className="mr-2 h-4 w-4" />
+                    View Team
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -160,9 +163,11 @@ export function CompanyAdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Invitation
+                <Button asChild variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Link href="/invitations">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Send Invitation
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -180,9 +185,11 @@ export function CompanyAdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Briefcase className="mr-2 h-4 w-4" />
-                  View Jobs
+                <Button asChild variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Link href="/jobs">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    View Jobs
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -234,17 +241,23 @@ export function CompanyAdminDashboard() {
                 <CardDescription>Common tasks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Create New Job
+                <Button asChild className="w-full justify-start" variant="outline">
+                  <Link href="/jobs/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create New Job
+                  </Link>
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Review Applications
+                <Button asChild className="w-full justify-start" variant="outline">
+                  <Link href="/jobs">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Review Applications
+                  </Link>
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Invite Recruiter
+                <Button asChild className="w-full justify-start" variant="outline">
+                  <Link href="/invitations">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Invite Recruiter
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

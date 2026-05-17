@@ -9,6 +9,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useDomains } from '@/hooks/useDomains';
 import { useJobs } from '@/hooks/useJobs';
 import { useApplications } from '@/hooks/useApplications';
+import Link from 'next/link';
 import { 
   Users, 
   Building2, 
@@ -143,9 +144,11 @@ export function SuperAdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Manage Domains
+                <Button asChild variant="outline" className="w-full group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors">
+                  <Link href="/domains">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Manage Domains
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -163,9 +166,11 @@ export function SuperAdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors">
-                  <Users className="mr-2 h-4 w-4" />
-                  View All Users
+                <Button asChild variant="outline" className="w-full group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors">
+                  <Link href="/users">
+                    <Users className="mr-2 h-4 w-4" />
+                    View All Users
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -183,9 +188,11 @@ export function SuperAdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Invitation
+                <Button asChild variant="outline" className="w-full group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors">
+                  <Link href="/invitations">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Send Invitation
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

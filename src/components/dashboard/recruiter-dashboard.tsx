@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useJobs } from '@/hooks/useJobs';
 import { useApplications } from '@/hooks/useApplications';
+import Link from 'next/link';
 import { 
   Briefcase, 
   FileText, 
@@ -132,9 +133,11 @@ export function RecruiterDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  New Job Posting
+                <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
+                  <Link href="/jobs/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    New Job Posting
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -152,9 +155,11 @@ export function RecruiterDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
-                  <Briefcase className="mr-2 h-4 w-4" />
-                  View All Jobs
+                <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
+                  <Link href="/jobs">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    View All Jobs
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -172,9 +177,11 @@ export function RecruiterDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  View Analytics
+                <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
+                  <Link href="/jobs">
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    View Analytics
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -226,17 +233,23 @@ export function RecruiterDashboard() {
                 <CardDescription>Review applications</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
-                  <Clock className="mr-2 h-4 w-4" />
-                  Review Pending ({stats.pendingApplications})
+                <Button asChild className="w-full justify-start" variant="outline">
+                  <Link href="/jobs">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Review Pending ({stats.pendingApplications})
+                  </Link>
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
-                  View All Applications
+                <Button asChild className="w-full justify-start" variant="outline">
+                  <Link href="/jobs">
+                    <FileText className="mr-2 h-4 w-4" />
+                    View All Applications
+                  </Link>
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Accepted Candidates
+                <Button asChild className="w-full justify-start" variant="outline">
+                  <Link href="/jobs">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Accepted Candidates
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
