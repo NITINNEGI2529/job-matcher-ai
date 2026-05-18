@@ -8,6 +8,7 @@ const envSchema = z.object({
   CLERK_WEBHOOK_SECRET: z.string().min(1),
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  GROQ_API_KEY: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

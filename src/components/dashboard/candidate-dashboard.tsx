@@ -248,6 +248,24 @@ export function CandidateDashboard() {
                     Find jobs matching your skills
                   </CardDescription>
                 </CardHeader>
+              </Card>
+            </Link>
+
+            <Link href="/jobs/ai-match">
+              <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-purple-500">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                      <Star className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <CardTitle className="text-lg">AI Resume Match</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Find the most relevant jobs using AI based on your skills
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
                 <CardContent>
                   <div className="w-full py-2 px-4 rounded-md border border-input bg-background text-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
                     <Search className="inline-block mr-2 h-4 w-4" />
