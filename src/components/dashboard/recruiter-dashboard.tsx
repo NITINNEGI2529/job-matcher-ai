@@ -132,11 +132,17 @@ export function RecruiterDashboard() {
                   Post a new job opening
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
                 <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
                   <Link href="/jobs/new">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     New Job Posting
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
+                  <Link href="/jobs/upload">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Upload Jobs (CSV)
                   </Link>
                 </Button>
               </CardContent>
