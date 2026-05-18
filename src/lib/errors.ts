@@ -34,21 +34,20 @@ export class NotFoundError extends AppError {
   }
 }
 
+import { errorResponse } from '@/lib/api/response';
+
 // Global error handler for Route Handlers
 export function handleRouteError(error: unknown): Response {
   console.error('Route error:', error);
   
   if (error instanceof AppError) {
-    return Response.json(
+    return errorResponse(
       {
-        error: {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          timestamp: new Date().toISOString(),
-        },
+        code: error.code,
+        message: error.message,
+        fields: error.details as any, // mapping details to fields if applicable
       },
-      { status: error.statusCode }
+      error.statusCode
     );
   }
   
@@ -56,29 +55,22 @@ export function handleRouteError(error: unknown): Response {
   if (error instanceof Error && error.name === 'PrismaClientKnownRequestError') {
     const prismaError = error as Error & { code?: string; meta?: unknown };
     if (prismaError.code === 'P2002') {
-      return Response.json(
+      return errorResponse(
         {
-          error: {
-            code: 'UNIQUE_CONSTRAINT_VIOLATION',
-            message: 'A record with this value already exists',
-            details: prismaError.meta,
-            timestamp: new Date().toISOString(),
-          },
+          code: 'UNIQUE_CONSTRAINT_VIOLATION',
+          message: 'A record with this value already exists',
         },
-        { status: 400 }
+        400
       );
     }
   }
   
   // Generic server error
-  return Response.json(
+  return errorResponse(
     {
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred',
-        timestamp: new Date().toISOString(),
-      },
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred',
     },
-    { status: 500 }
+    500
   );
 }

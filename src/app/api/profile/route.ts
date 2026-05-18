@@ -3,6 +3,7 @@ import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, AuthorizationError, ValidationError } from '@/lib/errors';
 import { calculateMatchingScore } from '@/lib/matching';
 import { Role } from '@/generated/prisma';
+import { successResponse } from '@/lib/api/response';
 
 /**
  * PATCH /api/profile
@@ -48,58 +49,61 @@ export async function PATCH(request: Request) {
       }
       
       // Trim and filter empty skills
-      const trimmedSkills = skills.map((s) => s.trim()).filter((s) => s.length > 0);
-      
+      const trimmedSkills = skills.map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+
       if (trimmedSkills.length === 0) {
         throw new ValidationError('At least one non-empty skill is required');
       }
-      
-      // Update user's skills in the User model
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { skills: trimmedSkills },
-      });
-      
-      // Requirement 2.4: Recalculate matching scores for all user's applications
-      // Fetch all user's applications with job details
-      const applications = await prisma.application.findMany({
-        where: { userId: user.id },
-        include: {
-          job: {
-            select: {
-              requiredSkills: true,
-            },
+
+      // ── Atomic: update skills + recalculate all application scores ──────────
+      // Using $transaction ensures a partial failure (e.g. one score update)
+      // cannot leave skills updated but scores stale.
+      const result = await prisma.$transaction(async (tx) => {
+        // Update user's skills
+        await tx.user.update({
+          where: { id: user.id },
+          data: { skills: trimmedSkills },
+        });
+
+        // Fetch all user's applications with job details
+        const applications = await tx.application.findMany({
+          where: { userId: user.id },
+          include: {
+            job: { select: { requiredSkills: true } },
           },
-        },
+        });
+
+        // Recalculate matching scores for all applications
+        await Promise.all(
+          applications.map((application) => {
+            const matchingResult = calculateMatchingScore({
+              candidateSkills: trimmedSkills,
+              requiredSkills: application.job.requiredSkills,
+            });
+
+            return tx.application.update({
+              where: { id: application.id },
+              data: { matchingScore: matchingResult.score },
+            });
+          })
+        );
+
+        return applications.length;
       });
-      
-      // Update each application with recalculated matching score based on user's new skills
-      await Promise.all(
-        applications.map(async (application) => {
-          const matchingResult = calculateMatchingScore({
-            candidateSkills: trimmedSkills,
-            requiredSkills: application.job.requiredSkills,
-          });
-          
-          return prisma.application.update({
-            where: { id: application.id },
-            data: {
-              matchingScore: matchingResult.score,
-            },
-          });
-        })
-      );
-      
-      // Return success response with updated skills
-      return Response.json({
-        profile: {
-          userId: user.id,
-          skills: trimmedSkills,
-          applicationsUpdated: applications.length,
-        },
+
+      // Trigger embedding regeneration since skills changed
+      import('@/lib/ai/embeddings').then(({ generateAndStoreCandidateEmbedding }) => {
+        generateAndStoreCandidateEmbedding(user.id).catch(console.error);
+      });
+
+      return successResponse({
+        userId: user.id,
+        skills: trimmedSkills,
+        applicationsUpdated: result,
       });
     });
   } catch (error) {
     return handleRouteError(error);
   }
 }
+

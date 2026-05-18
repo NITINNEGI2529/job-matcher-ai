@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 
 interface UpdateProfileRequest {
@@ -7,11 +7,9 @@ interface UpdateProfileRequest {
 }
 
 interface UpdateProfileResponse {
-  profile: {
-    id: string; // Candidate's Clerk ID
-    skills: string[];
-    applicationsUpdated: number;
-  };
+  id: string; // Candidate's Clerk ID
+  skills: string[];
+  applicationsUpdated: number;
 }
 
 /**
@@ -28,8 +26,8 @@ export function useUpdateProfile() {
   
   return useMutation({
     mutationFn: async (profileData: UpdateProfileRequest) => {
-      const { data } = await apiClient.patch<UpdateProfileResponse>('/profile', profileData);
-      return data.profile;
+      const res = await typedApiClient.patch<UpdateProfileResponse>('/profile', profileData);
+      return res.data;
     },
     onSuccess: () => {
       // Invalidate profile and applications query cache to trigger refetch

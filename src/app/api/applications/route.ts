@@ -3,6 +3,8 @@ import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, AuthorizationError, ValidationError, NotFoundError } from '@/lib/errors';
 import { calculateMatchingScore } from '@/lib/matching';
 import { Role } from '@/generated/prisma';
+import { successResponse } from '@/lib/api/response';
+import { createApplicationSchema } from '@/lib/validations/application';
 
 /**
  * GET /api/applications
@@ -94,14 +96,11 @@ export async function GET(request: Request) {
         where: whereClause,
       });
       
-      return Response.json({
-        applications,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
+      return successResponse(applications, {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       });
     });
   } catch (error) {
@@ -135,80 +134,79 @@ export async function POST(request: Request) {
       if (user.role !== Role.CANDIDATE) {
         throw new AuthorizationError('Only candidates can create applications');
       }
-      
+
       // Parse and validate request body
       const body = await request.json();
-      const { jobId } = body;
+      const parsed = createApplicationSchema.safeParse(body);
       
-      if (!jobId || typeof jobId !== 'string') {
-        throw new ValidationError('jobId is required and must be a string');
+      if (!parsed.success) {
+        throw new ValidationError('Invalid application data');
       }
       
+      const { jobId } = parsed.data;
+
       // Get user's skills from User model
       const userWithSkills = await prisma.user.findUnique({
         where: { id: user.id },
         select: { skills: true },
       });
-      
-      if (!userWithSkills || !userWithSkills.skills || userWithSkills.skills.length === 0) {
+
+      if (!userWithSkills?.skills?.length) {
         throw new ValidationError('Please add skills to your profile before applying to jobs');
       }
-      
+
       const candidateSkills = userWithSkills.skills;
-      
-      // Check for duplicate application
-      const existingApplication = await prisma.application.findUnique({
-        where: {
-          jobId_userId: {
-            jobId,
-            userId: user.id,
-          },
-        },
-      });
-      
-      if (existingApplication) {
-        throw new ValidationError('You have already applied to this job');
-      }
-      
-      // Fetch job to get requiredSkills
+
+      // Fetch job to get requiredSkills (existence check)
       const job = await prisma.job.findUnique({
         where: { id: jobId },
-        select: {
-          id: true,
-          requiredSkills: true,
-        },
+        select: { id: true, requiredSkills: true },
       });
-      
+
       if (!job) {
         throw new NotFoundError('Job');
       }
-      
-      // Calculate matching score
+
+      // Calculate matching score before transaction
       const matchingResult = calculateMatchingScore({
         candidateSkills,
         requiredSkills: job.requiredSkills,
       });
-      
-      // Create application
-      const application = await prisma.application.create({
-        data: {
-          jobId,
-          userId: user.id,
-          matchingScore: matchingResult.score,
-          status: 'PENDING',
-        },
-        select: {
-          id: true,
-          jobId: true,
-          userId: true,
-          matchingScore: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+
+      // ── Atomic: duplicate check + create inside a transaction ──────────────
+      // Eliminates the TOCTOU race condition. The unique constraint on
+      // (jobId, userId) is the last line of defence; the transaction removes
+      // the race window entirely.
+      const application = await prisma.$transaction(async (tx) => {
+        const duplicate = await tx.application.findUnique({
+          where: { jobId_userId: { jobId, userId: user.id } },
+          select: { id: true },
+        });
+
+        if (duplicate) {
+          throw new ValidationError('You have already applied to this job');
+        }
+
+        return tx.application.create({
+          data: {
+            jobId,
+            userId: user.id,
+            matchingScore: matchingResult.score,
+            status: 'PENDING',
+          },
+          select: {
+            id: true,
+            jobId: true,
+            userId: true,
+            matchingScore: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
       });
-      
-      return Response.json({ application }, { status: 201 });
+
+      return successResponse(application, undefined, 201);
     });
   } catch (error) {
     return handleRouteError(error);

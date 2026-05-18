@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, ValidationError, AuthorizationError } from '@/lib/errors';
 import { Role } from '@/generated/prisma';
+import { generateAndStoreJobEmbedding } from '@/lib/ai/embeddings';
+import { successResponse } from '@/lib/api/response';
+import { jobSchema } from '@/lib/validations/job';
 
 /**
  * GET /api/jobs
@@ -46,10 +49,61 @@ export async function GET(request: Request) {
       const skip = (page - 1) * limit;
       
       // Build where clause based on role
-      const whereClause: { domainId?: string } = {};
+      const statusFilter = searchParams.get('status');
+      const whereClause: { domainId?: string; status?: 'DRAFT' | 'ACTIVE' | 'CLOSED' } = {};
+
+      // Default: candidates only see ACTIVE jobs
+      if (!statusFilter && user.role === Role.CANDIDATE) {
+        whereClause.status = 'ACTIVE';
+      } else if (statusFilter === 'DRAFT' || statusFilter === 'ACTIVE' || statusFilter === 'CLOSED') {
+        whereClause.status = statusFilter;
+      }
       
+      const isRecommended = searchParams.get('recommended') === 'true';
+
       if (user.role === Role.CANDIDATE) {
-        // Candidates see jobs from all domains
+        if (isRecommended) {
+          const hasEmbedding = await prisma.candidateEmbedding.findUnique({
+            where: { candidateId: user.id },
+            select: { id: true },
+          });
+
+          if (hasEmbedding) {
+            const rawJobs = await prisma.$queryRaw<any[]>`
+              SELECT 
+                j.id, j.title, j.description, j."requiredSkills", j."domainId", j.status, j."createdAt", j."updatedAt",
+                (1 - (je.embedding <=> ce.embedding)) * 100 as "aiScore"
+              FROM jobs j
+              JOIN job_embeddings je ON j.id = je."jobId"
+              JOIN candidate_embeddings ce ON ce."candidateId" = ${user.id}
+              WHERE j.status = 'ACTIVE'
+              ORDER BY je.embedding <=> ce.embedding ASC
+              LIMIT ${limit} OFFSET ${skip};
+            `;
+            
+            const countRes = await prisma.$queryRaw<{count: bigint}[]>`
+              SELECT COUNT(j.id) as count 
+              FROM jobs j
+              JOIN job_embeddings je ON j.id = je."jobId"
+              WHERE j.status = 'ACTIVE'
+            `;
+            const total = Number(countRes[0]?.count || 0);
+
+            const jobs = rawJobs.map(job => ({
+              ...job,
+              aiScore: Number(job.aiScore),
+            }));
+
+            return successResponse(jobs, {
+              page,
+              limit,
+              total,
+              totalPages: Math.ceil(total / limit),
+            });
+          }
+        }
+        
+        // Candidates see jobs from all domains if not doing semantic search or semantic fails
         if (domainIdFilter) {
           whereClause.domainId = domainIdFilter;
         }
@@ -74,13 +128,13 @@ export async function GET(request: Request) {
           description: true,
           requiredSkills: true,
           domainId: true,
+          status: true,
           createdAt: true,
+          updatedAt: true,
         },
         skip,
         take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: { createdAt: 'desc' },
       });
       
       // Get total count for pagination metadata
@@ -88,14 +142,11 @@ export async function GET(request: Request) {
         where: whereClause,
       });
       
-      return Response.json({
-        jobs,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
+      return successResponse(jobs, {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       });
     });
   } catch (error) {
@@ -134,53 +185,24 @@ export async function POST(request: Request) {
         throw new ValidationError('User must belong to a domain to create jobs');
       }
       
-      // Parse request body
+      // Parse and validate request body
       const body = await request.json();
-      const { title, description, requiredSkills } = body;
+      const parsed = jobSchema.safeParse(body);
       
-      // Validate required fields
-      if (!title || typeof title !== 'string' || title.trim().length === 0) {
-        throw new ValidationError('title is required and must be a non-empty string');
-      }
-      
-      // Validate title length (5-200 characters) - Requirement 5.5
-      const trimmedTitle = title.trim();
-      if (trimmedTitle.length < 5) {
-        throw new ValidationError('Job title must be at least 5 characters');
-      }
-      if (trimmedTitle.length > 200) {
-        throw new ValidationError('Job title must not exceed 200 characters');
+      if (!parsed.success) {
+        throw new ValidationError('Invalid job data');
       }
       
-      if (!description || typeof description !== 'string' || description.trim().length === 0) {
-        throw new ValidationError('description is required and must be a non-empty string');
-      }
+      const { title, description, requiredSkills, status } = parsed.data;
       
-      // Validate description length (20-5000 characters) - Requirement 5.6
-      const trimmedDescription = description.trim();
-      if (trimmedDescription.length < 20) {
-        throw new ValidationError('Job description must be at least 20 characters');
-      }
-      if (trimmedDescription.length > 5000) {
-        throw new ValidationError('Job description must not exceed 5000 characters');
-      }
-      
-      if (!Array.isArray(requiredSkills) || requiredSkills.length === 0) {
-        throw new ValidationError('requiredSkills is required and must be a non-empty array');
-      }
-      
-      // Validate all skills are strings
-      if (!requiredSkills.every(skill => typeof skill === 'string' && skill.trim().length > 0)) {
-        throw new ValidationError('All requiredSkills must be non-empty strings');
-      }
-      
-      // Create job with user's domainId - Requirements 5.2, 5.3
+      // Create job with user's domainId
       const job = await prisma.job.create({
         data: {
-          title: trimmedTitle,
-          description: trimmedDescription,
-          requiredSkills: requiredSkills.map(skill => skill.trim()),
+          title,
+          description,
+          requiredSkills,
           domainId,
+          status,
         },
         select: {
           id: true,
@@ -188,11 +210,15 @@ export async function POST(request: Request) {
           description: true,
           requiredSkills: true,
           domainId: true,
+          status: true,
           createdAt: true,
         },
       });
-      
-      return Response.json({ job }, { status: 201 });
+
+      // Trigger job embedding in background (non-blocking)
+      generateAndStoreJobEmbedding(job.id).catch(() => {});
+
+      return successResponse(job, undefined, 201);
     });
   } catch (error) {
     return handleRouteError(error);

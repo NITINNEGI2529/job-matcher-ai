@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import type { Job } from '@/generated/prisma';
 
@@ -27,8 +27,8 @@ export function useCreateJob() {
   
   return useMutation({
     mutationFn: async (jobData: CreateJobRequest) => {
-      const { data } = await apiClient.post<{ job: Job }>('/jobs', jobData);
-      return data.job;
+      const res = await typedApiClient.post<Job>('/jobs', jobData);
+      return res.data;
     },
     onSuccess: () => {
       // Invalidate jobs query cache to trigger refetch
@@ -57,8 +57,8 @@ export function useUpdateJob() {
   
   return useMutation({
     mutationFn: async ({ id, ...updateData }: UpdateJobRequest & { id: string }) => {
-      const { data } = await apiClient.patch<{ job: Job }>(`/jobs/${id}`, updateData);
-      return data.job;
+      const res = await typedApiClient.patch<Job>(`/jobs/${id}`, updateData);
+      return res.data;
     },
     onSuccess: () => {
       // Invalidate jobs query cache to trigger refetch
@@ -87,8 +87,8 @@ export function useDeleteJob() {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.delete<{ success: boolean }>(`/jobs/${id}`);
-      return data;
+      const res = await typedApiClient.delete<{ success: boolean }>(`/jobs/${id}`);
+      return res.data;
     },
     onSuccess: () => {
       // Invalidate jobs query cache to trigger refetch

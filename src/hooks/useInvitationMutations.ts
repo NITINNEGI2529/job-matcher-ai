@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import type { Invitation, Role } from '@/generated/prisma';
 
@@ -14,8 +14,8 @@ export function useCreateInvitation() {
 
   return useMutation({
     mutationFn: async (invitationData: CreateInvitationRequest) => {
-      const { data } = await apiClient.post<{ invitation: Invitation }>('/invitations', invitationData);
-      return data.invitation;
+      const res = await typedApiClient.post<Invitation>('/invitations', invitationData);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

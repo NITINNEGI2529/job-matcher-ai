@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { extractErrorMessage } from '@/lib/error-messages';
 
 /**
  * Show a success toast notification
@@ -12,8 +13,8 @@ export function showSuccessToast(message: string) {
  * Show an error toast notification
  * @param message - The error message to display
  */
-export function showErrorToast(message: string) {
-  toast.error(message);
+export function showErrorToast(message: unknown) {
+  toast.error(extractErrorMessage(message));
 }
 
 /**

@@ -1,49 +1,40 @@
-export interface MatchingInput {
+/**
+ * Legacy deterministic matching — kept for backwards compatibility and as the
+ * synchronous fallback used during application creation (before embeddings exist).
+ *
+ * For full hybrid semantic+skill+experience matching, use:
+ *   import { rankCandidatesForJob } from '@/lib/ai/matching'
+ */
+
+interface MatchInput {
   candidateSkills: string[];
   requiredSkills: string[];
 }
 
-export interface MatchingResult {
+interface MatchResult {
   score: number;
   commonSkills: string[];
-  missingSkills: string[];
-  totalRequired: number;
 }
 
-export function calculateMatchingScore(input: MatchingInput): MatchingResult {
-  const { candidateSkills, requiredSkills } = input;
-  
-  // Normalize skills to lowercase for case-insensitive comparison
-  const normalizedCandidateSkills = candidateSkills.map(s => s.toLowerCase().trim());
-  const normalizedRequiredSkills = requiredSkills.map(s => s.toLowerCase().trim());
-  
-  // Handle edge case: no required skills
-  if (normalizedRequiredSkills.length === 0) {
-    return {
-      score: 0,
-      commonSkills: [],
-      missingSkills: [],
-      totalRequired: 0,
-    };
+/**
+ * Calculates a deterministic skill-overlap score using Jaccard similarity.
+ * Returns a score between 0 and 1 and the list of common skills.
+ */
+export function calculateMatchingScore({ candidateSkills, requiredSkills }: MatchInput): MatchResult {
+  if (!requiredSkills.length || !candidateSkills.length) {
+    return { score: 0, commonSkills: [] };
   }
-  
-  // Find common skills
-  const commonSkills = normalizedRequiredSkills.filter(skill =>
-    normalizedCandidateSkills.includes(skill)
-  );
-  
-  // Find missing skills
-  const missingSkills = normalizedRequiredSkills.filter(skill =>
-    !normalizedCandidateSkills.includes(skill)
-  );
-  
-  // Calculate score as percentage
-  const score = (commonSkills.length / normalizedRequiredSkills.length) * 100;
-  
-  return {
-    score: Math.round(score * 100) / 100, // Round to 2 decimal places
-    commonSkills,
-    missingSkills,
-    totalRequired: normalizedRequiredSkills.length,
-  };
+
+  const candidateSet = new Set(candidateSkills.map((s) => s.toLowerCase().trim()));
+  const requiredSet = new Set(requiredSkills.map((s) => s.toLowerCase().trim()));
+
+  const commonSkills: string[] = [];
+  for (const skill of requiredSet) {
+    if (candidateSet.has(skill)) commonSkills.push(skill);
+  }
+
+  const union = new Set([...candidateSet, ...requiredSet]);
+  const score = union.size > 0 ? commonSkills.length / union.size : 0;
+
+  return { score, commonSkills };
 }

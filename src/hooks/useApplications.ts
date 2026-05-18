@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 import type { Application, ApplicationStatus, Job, User } from '@/generated/prisma';
 
 // API response types that extend Prisma types with relations
@@ -23,53 +23,25 @@ interface ApplicationScore {
   totalRequiredSkills: number;
 }
 
-export function useCreateApplication() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (applicationData: CreateApplicationRequest) => {
-      const { data } = await apiClient.post<{ application: ApplicationWithRelations }>('/applications', applicationData);
-      return data.application;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      queryClient.invalidateQueries({ queryKey: ['jobs', data.jobId, 'applications'] });
-    },
-  });
-}
 
 export function useApplication(id: string) {
   return useQuery({
     queryKey: ['applications', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ application: ApplicationWithRelations }>(`/applications/${id}`);
-      return data.application;
+      const res = await typedApiClient.get<ApplicationWithRelations>(`/applications/${id}`);
+      return res.data;
     },
     enabled: !!id,
   });
 }
 
-export function useUpdateApplication() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ id, ...updateData }: UpdateApplicationRequest & { id: string }) => {
-      const { data } = await apiClient.patch<{ application: ApplicationWithRelations }>(`/applications/${id}`, updateData);
-      return data.application;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      queryClient.invalidateQueries({ queryKey: ['jobs', data.jobId, 'applications'] });
-    },
-  });
-}
 
 export function useApplicationScore(id: string) {
   return useQuery({
     queryKey: ['applications', id, 'score'],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApplicationScore>(`/applications/${id}/score`);
-      return data;
+      const res = await typedApiClient.get<ApplicationScore>(`/applications/${id}/score`);
+      return res.data;
     },
     enabled: !!id,
   });
@@ -79,8 +51,8 @@ export function useApplications() {
   return useQuery({
     queryKey: ['applications'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ applications: ApplicationWithRelations[] }>('/applications');
-      return data.applications;
+      const res = await typedApiClient.get<ApplicationWithRelations[]>('/applications');
+      return res.data;
     },
   });
 }

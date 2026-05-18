@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 
 interface Domain {
   id: string;
@@ -31,8 +31,8 @@ export function useDomains() {
   return useQuery({
     queryKey: ['domains'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ domains: Domain[] }>('/domains');
-      return data.domains;
+      const res = await typedApiClient.get<Domain[]>('/domains');
+      return res.data;
     },
   });
 }
@@ -41,8 +41,8 @@ export function useDomain(id: string) {
   return useQuery({
     queryKey: ['domains', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ domain: Domain }>(`/domains/${id}`);
-      return data.domain;
+      const res = await typedApiClient.get<Domain>(`/domains/${id}`);
+      return res.data;
     },
     enabled: !!id,
   });
@@ -53,8 +53,8 @@ export function useCreateDomain() {
   
   return useMutation({
     mutationFn: async (domainData: CreateDomainRequest) => {
-      const { data } = await apiClient.post<{ domain: Domain }>('/domains', domainData);
-      return data.domain;
+      const res = await typedApiClient.post<Domain>('/domains', domainData);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] });
@@ -67,8 +67,8 @@ export function useUpdateDomain() {
   
   return useMutation({
     mutationFn: async ({ id, ...updateData }: UpdateDomainRequest & { id: string }) => {
-      const { data } = await apiClient.patch<{ domain: Domain }>(`/domains/${id}`, updateData);
-      return data.domain;
+      const res = await typedApiClient.patch<Domain>(`/domains/${id}`, updateData);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] });
@@ -81,8 +81,8 @@ export function useDeleteDomain() {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.delete<{ success: boolean; message: string }>(`/domains/${id}`);
-      return data;
+      const res = await typedApiClient.delete<{ success: boolean; message: string }>(`/domains/${id}`);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] });

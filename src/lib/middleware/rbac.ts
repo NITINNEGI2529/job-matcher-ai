@@ -1,4 +1,5 @@
 import { Role } from '@/generated/prisma';
+import { AuthorizationError } from '@/lib/errors';
 
 type Permission = 'read:jobs' | 'write:jobs' | 'read:users' | 'write:users' | 'manage:domain';
 
@@ -15,6 +16,8 @@ export function hasPermission(role: Role, permission: Permission): boolean {
 
 export function requirePermission(role: Role, permission: Permission): void {
   if (!hasPermission(role, permission)) {
-    throw new Error('Forbidden: Insufficient permissions');
+    // Throw AuthorizationError so handleRouteError returns a proper 403 response
+    // instead of an unhandled 500 from a generic Error.
+    throw new AuthorizationError('Forbidden: Insufficient permissions');
   }
 }

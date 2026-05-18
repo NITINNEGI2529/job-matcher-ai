@@ -25,6 +25,7 @@ import {
   Plus,
   X
 } from 'lucide-react';
+import { ResumeUpload } from './resume-upload';
 
 export function CandidateDashboard() {
   const { data: currentUser } = useCurrentUser();
@@ -75,7 +76,7 @@ export function CandidateDashboard() {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAddSkill();
@@ -110,7 +111,7 @@ export function CandidateDashboard() {
                   placeholder="e.g., React, Node.js, Python..."
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   disabled={isPending}
                 />
                 <Button
@@ -226,6 +227,10 @@ export function CandidateDashboard() {
         </div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <ResumeUpload />
+      </div>
+
       {/* Candidate Actions */}
       <Tabs defaultValue="jobs" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
@@ -266,8 +271,21 @@ export function CandidateDashboard() {
                 </CardHeader>
               </Card>
             </Link>
+            <Link href="/jobs">
+              <Card className="group hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-2 hover:border-green-500">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                      <Search className="h-5 w-5 text-green-500" />
+                    </div>
+                    <CardTitle className="text-lg">Search Jobs</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Find jobs that match your criteria
+                  </CardDescription>
+                </CardHeader>
                 <CardContent>
-                  <div className="w-full py-2 px-4 rounded-md border border-input bg-background text-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <div className="w-full py-2 px-4 rounded-md border border-input bg-background text-center group-hover:bg-green-500 group-hover:text-white transition-colors">
                     <Search className="inline-block mr-2 h-4 w-4" />
                     Search Jobs
                   </div>

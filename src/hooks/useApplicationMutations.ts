@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import type { Application, ApplicationStatus } from '@/generated/prisma';
 
@@ -22,8 +22,8 @@ export function useCreateApplication() {
   
   return useMutation({
     mutationFn: async (applicationData: CreateApplicationRequest) => {
-      const { data } = await apiClient.post<{ application: Application }>('/applications', applicationData);
-      return data.application;
+      const res = await typedApiClient.post<Application>('/applications', applicationData);
+      return res.data;
     },
     onSuccess: () => {
       // Invalidate applications query cache to trigger refetch
@@ -54,11 +54,11 @@ export function useUpdateApplicationStatus() {
   
   return useMutation({
     mutationFn: async ({ applicationId, status }: { applicationId: string; status: ApplicationStatus }) => {
-      const { data } = await apiClient.patch<{ application: Application }>(
+      const res = await typedApiClient.patch<Application>(
         `/applications/${applicationId}/status`,
         { status }
       );
-      return data.application;
+      return res.data;
     },
     onSuccess: () => {
       // Invalidate applications query cache to trigger refetch

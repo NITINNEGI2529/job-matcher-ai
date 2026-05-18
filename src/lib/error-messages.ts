@@ -85,6 +85,21 @@ export function getErrorMessage(code: string): string {
  * Handles API errors, Error objects, and string messages
  */
 export function extractErrorMessage(error: unknown): string {
+  // Handle direct API error payloads like { code, message, timestamp }
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    'message' in error &&
+    typeof (error as { message?: unknown }).message === 'string'
+  ) {
+    const apiError = error as { code?: string; message?: string };
+    if (apiError.code) {
+      return getErrorMessage(apiError.code);
+    }
+    return apiError.message ?? ERROR_MESSAGES[ERROR_CODES.UNKNOWN_ERROR];
+  }
+
   // Handle API error response format
   if (error && typeof error === 'object' && 'error' in error) {
     const apiError = error as { error: { code?: string; message?: string } };

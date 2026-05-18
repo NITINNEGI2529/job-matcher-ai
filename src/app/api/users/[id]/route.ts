@@ -17,6 +17,8 @@ import { Role } from '@/generated/prisma';
  * @throws {AuthorizationError} If user attempts cross-domain access
  * @throws {NotFoundError} If user is not found
  */
+import { successResponse } from '@/lib/api/response';
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -47,7 +49,7 @@ export async function GET(
         throw new AuthorizationError('Insufficient permissions to access this user');
       }
       
-      return Response.json({ user: targetUser });
+      return successResponse(targetUser);
     });
   } catch (error) {
     return handleRouteError(error);
@@ -201,7 +203,7 @@ export async function PATCH(
         },
       });
       
-      return Response.json({ user: updatedUser });
+      return successResponse(updatedUser);
     });
   } catch (error) {
     return handleRouteError(error);

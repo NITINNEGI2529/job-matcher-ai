@@ -19,6 +19,8 @@ import { Role } from '@/generated/prisma';
  * @throws {AuthenticationError} If user is not authenticated
  * @throws {ValidationError} If query parameters are invalid
  */
+import { successResponse } from '@/lib/api/response';
+
 export async function GET(request: Request) {
   try {
     return await withDomainIsolation(async (user, domainId) => {
@@ -70,15 +72,15 @@ export async function GET(request: Request) {
         where: whereClause,
       });
       
-      return Response.json({
+      return successResponse(
         users,
-        pagination: {
+        {
           page,
           limit,
           total,
           totalPages: Math.ceil(total / limit),
-        },
-      });
+        }
+      );
     });
   } catch (error) {
     return handleRouteError(error);

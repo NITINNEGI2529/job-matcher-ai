@@ -31,14 +31,14 @@ export async function POST(request: Request) {
       if (user.role !== Role.COMPANY_ADMIN && user.role !== Role.SUPER_ADMIN) {
         throw new AuthorizationError('Only COMPANY_ADMIN and SUPER_ADMIN can send invitations');
       }
-      
+
       // Parse and validate request body
       const body = await request.json();
       const { email, role = Role.RECRUITER, domainId: bodyDomainId } = body;
-      
+
       // Determine the target domain
       let targetDomainId: string | undefined;
-      
+
       if (user.role === Role.COMPANY_ADMIN) {
         // Company admin must have a domain and can only invite to their domain
         if (!userDomainId) {
@@ -52,38 +52,42 @@ export async function POST(request: Request) {
         }
         targetDomainId = bodyDomainId;
       }
-      
+
       // Validate email is provided
       if (!email || typeof email !== 'string') {
         throw new ValidationError('email is required and must be a string');
       }
-      
+
       // Basic email format validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         throw new ValidationError('Invalid email format');
       }
-      
+
       // Validate role if provided
       if (role && typeof role !== 'string') {
         throw new ValidationError('role must be a string');
       }
-      
+
       const validRoles: Role[] = ['SUPER_ADMIN', 'COMPANY_ADMIN', 'RECRUITER', 'CANDIDATE'];
       if (role && !validRoles.includes(role as Role)) {
         throw new ValidationError(`role must be one of: ${validRoles.join(', ')}`);
       }
-      
+
       // Create Clerk user with public_metadata for role and domainId
       // The webhook will handle syncing this to the database
       try {
         const client = await clerkClient();
-        await client.users.createUser({
-          emailAddress: [email.toLowerCase().trim()],
+
+        await client.invitations.createInvitation({
+          emailAddress: email.toLowerCase().trim(),
+
           publicMetadata: {
             role: role as Role,
             domainId: targetDomainId,
           },
+
+          redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/sign-up`,
         });
       } catch (clerkError) {
         // Type-safe error handling
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
           errors?: Array<{ code: string; message: string }>;
           message?: string;
         };
-        
+
         // Check if it's a duplicate user error
         if (error?.errors?.[0]?.code === 'duplicate_identifier') {
           // User already exists in Clerk, just store invitation record
@@ -101,12 +105,12 @@ export async function POST(request: Request) {
           throw new ValidationError(`Failed to create Clerk user: ${errorMsg}`);
         }
       }
-      
+
       // Ensure domainId is not undefined for the database
       if (!targetDomainId) {
         throw new ValidationError('Failed to determine target domain for invitation');
       }
-      
+
       // Store invitation record in database for tracking
       const invitation = await prisma.invitation.create({
         data: {
@@ -122,7 +126,7 @@ export async function POST(request: Request) {
           createdAt: true,
         },
       });
-      
+
       return Response.json({ invitation });
     });
   } catch (error) {

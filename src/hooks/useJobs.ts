@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/axios';
+import { typedApiClient } from '@/lib/api/client';
 import type { Job, Application, User } from '@/generated/prisma';
 
 // API response types that extend Prisma types with relations
@@ -19,13 +19,19 @@ interface UpdateJobRequest {
   requiredSkills?: string[];
 }
 
-export function useJobs(domainId?: string) {
+export interface JobWithScore extends Job {
+  aiScore?: number;
+}
+
+export function useJobs(domainId?: string, recommended?: boolean) {
   return useQuery({
-    queryKey: ['jobs', domainId],
+    queryKey: ['jobs', domainId, recommended],
     queryFn: async () => {
-      const params = domainId ? { domainId } : {};
-      const { data } = await apiClient.get<{ jobs: Job[] }>('/jobs', { params });
-      return data.jobs;
+      const params: Record<string, string> = {};
+      if (domainId) params.domainId = domainId;
+      if (recommended) params.recommended = 'true';
+      const res = await typedApiClient.get<JobWithScore[]>('/jobs', params);
+      return res.data;
     },
   });
 }
@@ -34,61 +40,20 @@ export function useJob(id: string) {
   return useQuery({
     queryKey: ['jobs', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ job: Job }>(`/jobs/${id}`);
-      return data.job;
+      const res = await typedApiClient.get<Job>(`/jobs/${id}`);
+      return res.data;
     },
     enabled: !!id,
   });
 }
 
-export function useCreateJob() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (jobData: CreateJobRequest) => {
-      const { data } = await apiClient.post<{ job: Job }>('/jobs', jobData);
-      return data.job;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    },
-  });
-}
-
-export function useUpdateJob() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ id, ...updateData }: UpdateJobRequest & { id: string }) => {
-      const { data } = await apiClient.patch<{ job: Job }>(`/jobs/${id}`, updateData);
-      return data.job;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    },
-  });
-}
-
-export function useDeleteJob() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { data } = await apiClient.delete<{ success: boolean }>(`/jobs/${id}`);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-    },
-  });
-}
 
 export function useJobApplications(jobId: string) {
   return useQuery({
     queryKey: ['jobs', jobId, 'applications'],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ applications: ApplicationWithUser[] }>(`/jobs/${jobId}/applications`);
-      return data.applications;
+      const res = await typedApiClient.get<ApplicationWithUser[]>(`/jobs/${jobId}/applications`);
+      return res.data;
     },
     enabled: !!jobId,
   });
