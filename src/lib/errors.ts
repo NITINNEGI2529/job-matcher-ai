@@ -45,7 +45,7 @@ export function handleRouteError(error: unknown): Response {
       {
         code: error.code,
         message: error.message,
-        fields: error.details as any, // mapping details to fields if applicable
+        fields: error.details as Record<string, string[]>, // mapping details to fields if applicable
       },
       error.statusCode
     );

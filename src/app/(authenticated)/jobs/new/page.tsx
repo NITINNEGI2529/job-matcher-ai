@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { jobSchema, type JobInput } from '@/lib/validations/job';
 import { JobStatus } from '@/generated/prisma';
+import { TagInput } from '@/components/ui/tag-input';
 
 export default function NewJobPage() {
   const router = useRouter();
@@ -35,8 +36,9 @@ export default function NewJobPage() {
       onSuccess: () => {
         router.push('/jobs');
       },
-      onError: (error: any) => {
-        form.setError('root', { message: error?.message || 'Unable to create job posting. Please try again.' });
+      onError: (error) => {
+        const errMsg = error instanceof Error ? error.message : 'Unable to create job posting. Please try again.';
+        form.setError('root', { message: errMsg });
       },
     });
   };
@@ -134,17 +136,14 @@ export default function NewJobPage() {
                     <FormItem>
                       <FormLabel>Required Skills</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter comma-separated skills, e.g. React, TypeScript, SQL"
+                        <TagInput
+                          placeholder="Type a skill (e.g. React) and press Enter"
                           disabled={isPending}
-                          value={field.value?.join(', ') || ''}
-                          onChange={(e) => {
-                            const skills = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
-                            field.onChange(skills);
-                          }}
+                          value={field.value || []}
+                          onChange={field.onChange}
                         />
                       </FormControl>
-                      <FormDescription>Separate skills with commas.</FormDescription>
+                      <FormDescription>Press Enter or type a comma after each skill to create a tag.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

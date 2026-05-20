@@ -32,8 +32,9 @@ export default function DomainsPage() {
       onSuccess: () => {
         form.reset();
       },
-      onError: (error: any) => {
-        form.setError('root', { message: error?.message || 'Unable to create domain. Please try again.' });
+      onError: (error) => {
+        const errorMsg = error instanceof Error ? error.message : 'Unable to create domain. Please try again.';
+        form.setError('root', { message: errorMsg });
       },
     });
   };
@@ -98,7 +99,7 @@ export default function DomainsPage() {
                       <FormItem>
                         <FormLabel>Domain Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="example-company.com" disabled={isPending} {...field} />
+                          <Input placeholder="example-company" disabled={isPending} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

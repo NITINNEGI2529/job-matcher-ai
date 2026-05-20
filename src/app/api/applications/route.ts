@@ -43,17 +43,20 @@ export async function GET(request: Request) {
       
       // Build where clause based on role
       const whereClause: { userId?: string; job?: { domainId?: string } } = {};
+      const targetUserId = searchParams.get('userId');
       
       if (user.role === Role.CANDIDATE) {
         // Candidates see only their own applications
         whereClause.userId = user.id;
-      } else if (user.role !== Role.SUPER_ADMIN) {
-        // Recruiters and Company_Admins see applications for jobs in their domain
-        if (domainId) {
+      } else {
+        if (targetUserId) {
+          whereClause.userId = targetUserId;
+        }
+        if (user.role !== Role.SUPER_ADMIN && domainId) {
+          // Recruiters and Company_Admins see applications for jobs in their domain
           whereClause.job = { domainId };
         }
       }
-      // Super_Admin sees all applications (empty whereClause)
       
       // Fetch applications with pagination
       const applications = await prisma.application.findMany({

@@ -74,7 +74,7 @@ export default function UsersPage() {
                   <div key={user.id} className="rounded-lg border p-4">
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="font-semibold">{user.email}</p>
+                        <p className="font-semibold text-foreground">{user.email}</p>
                         <p className="text-sm text-muted-foreground">Role: {user.role}</p>
                       </div>
                       <div className="text-sm text-muted-foreground">

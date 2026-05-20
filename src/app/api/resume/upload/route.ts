@@ -5,8 +5,9 @@ import { Role } from '@/generated/prisma';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { parseResumeWithGroq } from '@/lib/ai/resume-parser';
 import { generateAndStoreCandidateEmbedding } from '@/lib/ai/embeddings';
-import pdfParse from "pdf-parse";
-``
+
+export const runtime = 'nodejs';
+
 /**
  * POST /api/resume/upload
  *
@@ -40,6 +41,29 @@ export async function POST(request: Request) {
         throw new ValidationError('File size must be under 5 MB');
       }
 
+      // ── 0. Delete previous resume from Supabase Storage if it exists ──────────
+      if (user.resumeUrl) {
+        try {
+          let oldPath = user.resumeUrl;
+          if (oldPath.includes('/public/resumes/')) {
+            oldPath = oldPath.split('/public/resumes/')[1];
+          } else if (oldPath.startsWith('http')) {
+            const parts = oldPath.split('/');
+            if (parts.length >= 2) {
+              oldPath = `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
+            }
+          }
+          
+          if (oldPath) {
+            console.log(`[resume] Deleting old resume file: ${oldPath}`);
+            const supabase = getSupabaseAdmin();
+            await supabase.storage.from('resumes').remove([oldPath]);
+          }
+        } catch (deleteError) {
+          console.error('[resume] Failed to delete old resume:', deleteError);
+        }
+      }
+
       // ── 1. Upload to Supabase Storage ────────────────────────────────────────
       const supabase = getSupabaseAdmin();
       const filePath = `${user.id}/${Date.now()}_resume.pdf`;
@@ -59,8 +83,9 @@ export async function POST(request: Request) {
       const { data: urlData } = supabase.storage.from('resumes').getPublicUrl(filePath);
       const resumeUrl = urlData?.publicUrl ?? filePath;
 
-      const pdfData = await pdfParse(fileBuffer);
-      const rawText = pdfData.text;
+      const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
+
+      const rawText = (await pdfParse(fileBuffer)).text;
 
       if (!rawText?.trim()) {
         throw new ValidationError('Could not extract text from the PDF. Ensure the file is not scanned/image-only.');
@@ -107,8 +132,8 @@ export async function POST(request: Request) {
           await tx.candidateExperience.createMany({
             data: parsed.experiences.map((exp) => ({
               candidateId: user.id,
-              company: exp.company,
-              role: exp.role,
+              company: exp.company || 'Unknown Company',
+              role: exp.role || 'Unknown Role',
               startDate: exp.startDate ? new Date(exp.startDate) : null,
               endDate: exp.endDate ? new Date(exp.endDate) : null,
               description: exp.description ?? null,
@@ -122,7 +147,7 @@ export async function POST(request: Request) {
           await tx.candidateEducation.createMany({
             data: parsed.education.map((edu) => ({
               candidateId: user.id,
-              institution: edu.institution,
+              institution: edu.institution || 'Unknown Institution',
               degree: edu.degree ?? null,
               field: edu.field ?? null,
               graduationYear: edu.graduationYear ?? null,
@@ -136,21 +161,38 @@ export async function POST(request: Request) {
           await tx.candidateCertification.createMany({
             data: parsed.certifications.map((cert) => ({
               candidateId: user.id,
-              name: cert.name,
+              name: cert.name || 'Unknown Certification',
               issuer: cert.issuer ?? null,
               year: cert.year ?? null,
             })),
           });
         }
 
-        // Upsert skills (keep existing + add new ones)
-        for (const skillName of parsed.skills.slice(0, 50)) {
-          await tx.candidateSkill.upsert({
-            where: { candidateId_name: { candidateId: user.id, name: skillName } },
-            create: { candidateId: user.id, name: skillName },
-            update: {},
+        // Upsert skills in batch (keep existing + add new ones using skipDuplicates: true)
+        if (parsed.skills.length) {
+          await tx.candidateSkill.createMany({
+            data: parsed.skills.slice(0, 50).map((skillName) => ({
+              candidateId: user.id,
+              name: skillName,
+            })),
+            skipDuplicates: true,
           });
         }
+
+        // Invalidate cached matching score & reasoning for all this user's applications that are not accepted
+        await tx.application.updateMany({
+          where: { 
+            userId: user.id,
+            status: { not: 'ACCEPTED' }
+          },
+          data: {
+            matchingScore: null,
+            aiReasoning: null,
+          },
+        });
+      }, {
+        maxWait: 15000,
+        timeout: 30000,
       });
 
       // ── 5. Trigger embedding (non-blocking — errors logged internally) ────────

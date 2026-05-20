@@ -1,23 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { typedApiClient } from '@/lib/api/client';
 import type { Job, Application, User } from '@/generated/prisma';
 
 // API response types that extend Prisma types with relations
 type ApplicationWithUser = Application & {
-  user?: Pick<User, 'id' | 'email' | 'role'>;
+  user?: Pick<User, 'id' | 'email' | 'role' | 'skills' | 'resumeUrl' | 'yearsOfExperience'> & {
+    experiences?: unknown[];
+    education?: unknown[];
+    certifications?: unknown[];
+  };
 };
 
-interface CreateJobRequest {
-  title: string;
-  description: string;
-  requiredSkills: string[];
-}
-
-interface UpdateJobRequest {
-  title?: string;
-  description?: string;
-  requiredSkills?: string[];
-}
 
 export interface JobWithScore extends Job {
   aiScore?: number;

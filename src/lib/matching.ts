@@ -33,8 +33,7 @@ export function calculateMatchingScore({ candidateSkills, requiredSkills }: Matc
     if (candidateSet.has(skill)) commonSkills.push(skill);
   }
 
-  const union = new Set([...candidateSet, ...requiredSet]);
-  const score = union.size > 0 ? commonSkills.length / union.size : 0;
+  const score = requiredSet.size > 0 ? commonSkills.length / requiredSet.size : 0;
 
   return { score, commonSkills };
 }

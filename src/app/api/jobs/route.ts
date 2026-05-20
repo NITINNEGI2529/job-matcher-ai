@@ -69,7 +69,19 @@ export async function GET(request: Request) {
           });
 
           if (hasEmbedding) {
-            const rawJobs = await prisma.$queryRaw<any[]>`
+            interface RawJobRow {
+              id: string;
+              title: string;
+              description: string;
+              requiredSkills: string[];
+              domainId: string;
+              status: string;
+              createdAt: Date;
+              updatedAt: Date;
+              aiScore: number;
+            }
+
+            const rawJobs = await prisma.$queryRaw<RawJobRow[]>`
               SELECT 
                 j.id, j.title, j.description, j."requiredSkills", j."domainId", j.status, j."createdAt", j."updatedAt",
                 (1 - (je.embedding <=> ce.embedding)) * 100 as "aiScore"

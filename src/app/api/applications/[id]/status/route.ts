@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, AuthorizationError, NotFoundError, ValidationError } from '@/lib/errors';
 import { Role, ApplicationStatus } from '@/generated/prisma';
+import { successResponse } from '@/lib/api/response';
 
 /**
  * PATCH /api/applications/[id]/status
@@ -116,7 +117,7 @@ export async function PATCH(
         },
       });
       
-      return Response.json({ application: updatedApplication });
+      return successResponse(updatedApplication);
     });
   } catch (error) {
     return handleRouteError(error);

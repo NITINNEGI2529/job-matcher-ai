@@ -31,6 +31,13 @@ export async function POST(request: Request) {
           year: body.year ?? null,
         },
       });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       return Response.json({ certification }, { status: 201 });
     });
   } catch (error) {
@@ -52,6 +59,13 @@ export async function PATCH(request: Request) {
           year: data.year ?? null,
         },
       });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       return Response.json({ certification });
     });
   } catch (error) {
@@ -67,6 +81,13 @@ export async function DELETE(request: Request) {
       const id = searchParams.get('id');
       if (!id) return Response.json({ error: 'id required' }, { status: 400 });
       await prisma.candidateCertification.delete({ where: { id, candidateId: user.id } });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       return Response.json({ success: true });
     });
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +70,7 @@ export default function AIMatchPage() {
           <AlertCircle className="w-6 h-6" />
           <div>
             <h3 className="font-semibold text-lg">Error loading matches</h3>
-            <p>{(error as any)?.response?.data?.error?.message || error.message || 'Failed to fetch AI matches.'}</p>
+            <p>{(error as unknown as Record<string, unknown> & { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || error.message || 'Failed to fetch AI matches.'}</p>
           </div>
         </div>
       )}
@@ -80,7 +80,7 @@ export default function AIMatchPage() {
           <User className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium">No matches found</h3>
           <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-            We couldn't find any direct matches based on your skills. Try adding more skills to your profile or check back later for new job postings.
+            We couldn&apos;t find any direct matches based on your skills. Try adding more skills to your profile or check back later for new job postings.
           </p>
           <Button className="mt-6" asChild>
             <Link href="/profile">Update Profile Skills</Link>
@@ -88,7 +88,7 @@ export default function AIMatchPage() {
         </div>
       )}
 
-      {!loading && matches && matches.map((match, i) => (
+      {!loading && matches && matches.map((match) => (
         <Card key={match.jobId} className="mb-6 overflow-hidden border-2 transition-all hover:border-purple-300">
           <div className="bg-purple-50/50 border-b p-4 flex justify-between items-center">
             <div className="flex items-center gap-3">

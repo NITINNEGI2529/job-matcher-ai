@@ -21,10 +21,14 @@ function getClient(): GoogleGenAI {
 export async function generateEmbeddingWithGemini(text: string): Promise<number[]> {
   const client = getClient();
   const response = await client.models.embedContent({
-    model: 'text-embedding-004',
+    model: 'gemini-embedding-2',
     contents: text.trim(),
-  });
-  
+    config: {
+      outputDimensionality: 768,
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
+
   if (!response.embeddings || response.embeddings.length === 0 || !response.embeddings[0].values) {
     throw new Error('Failed to generate embedding with Gemini');
   }

@@ -20,12 +20,7 @@ const formSchema = z.object({
   email: z.string().email('Invalid email format'),
   role: z.enum(['RECRUITER', 'COMPANY_ADMIN', 'SUPER_ADMIN', 'CANDIDATE']),
   domainId: z.string().optional(),
-}).refine((data) => {
-  // If role is SUPER_ADMIN, we need to enforce domainId if they are trying to invite someone to a specific domain?
-  // Wait, the logic is: if current user is SUPER_ADMIN, they MUST provide domainId.
-  // We handle this refinement in the component by checking currentUser.role inside onSubmit, or we pass it down.
-  return true;
-}, { message: "Validation failed" });
+});
 
 type FormInput = z.infer<typeof formSchema>;
 
@@ -67,8 +62,9 @@ export default function InvitationsPage() {
         form.reset();
         router.push('/dashboard');
       },
-      onError: (error: any) => {
-        form.setError('root', { message: error?.message || 'Unable to send invitation. Please try again.' });
+      onError: (error) => {
+        const errorMsg = error instanceof Error ? error.message : 'Unable to send invitation. Please try again.';
+        form.setError('root', { message: errorMsg });
       },
     });
   };

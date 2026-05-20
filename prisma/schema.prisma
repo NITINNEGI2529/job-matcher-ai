@@ -108,6 +108,7 @@ model Application {
   jobId         String
   userId        String
   matchingScore Float?
+  aiReasoning   String?
   status        ApplicationStatus @default(PENDING)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt

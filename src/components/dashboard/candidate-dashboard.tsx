@@ -23,9 +23,19 @@ import {
   XCircle,
   Star,
   Plus,
-  X
+  X,
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import { ResumeUpload } from './resume-upload';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
 
 export function CandidateDashboard() {
   const { data: currentUser } = useCurrentUser();
@@ -35,6 +45,7 @@ export function CandidateDashboard() {
 
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const prevSkillsRef = useRef<string>('');
 
   // Update local state when currentUser changes
@@ -227,9 +238,67 @@ export function CandidateDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <ResumeUpload />
-      </div>
+      {currentUser?.resumeUrl ? (
+        <div className="flex flex-col sm:flex-row gap-4 items-center p-5 border rounded-lg bg-muted/10 border-purple-500/10 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-blue-500/5 opacity-100 pointer-events-none" />
+          <div className="flex items-center gap-3 mr-auto relative z-10">
+            <div className="bg-purple-100 dark:bg-purple-950/50 p-2.5 rounded-lg">
+              <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-foreground">Your Resume is Uploaded</p>
+              <p className="text-xs text-muted-foreground">Ready for AI job matchmaking recommendations</p>
+            </div>
+          </div>
+          <div className="flex gap-3 w-full sm:w-auto relative z-10">
+            <Button
+              asChild
+              variant="outline"
+              size="default"
+              className="flex-1 sm:flex-initial gap-2 border-muted hover:bg-muted/10"
+            >
+              <a
+                href={currentUser.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View Resume
+              </a>
+            </Button>
+
+            <Dialog open={isResumeModalOpen} onOpenChange={setIsResumeModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="default"
+                  className="flex-1 sm:flex-initial bg-purple-600 hover:bg-purple-700 text-white gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Upload New Resume
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Upload New Resume</DialogTitle>
+                  <DialogDescription>
+                    Select or drag a new PDF resume. This will automatically delete your previous resume and update your parsed profile.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="pt-4">
+                  <ResumeUpload 
+                    forceUploadMode={true} 
+                    onUploadSuccess={() => setIsResumeModalOpen(false)} 
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          <ResumeUpload />
+        </div>
+      )}
 
       {/* Candidate Actions */}
       <Tabs defaultValue="jobs" className="space-y-4">

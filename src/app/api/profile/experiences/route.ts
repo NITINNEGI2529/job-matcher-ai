@@ -36,6 +36,13 @@ export async function POST(request: Request) {
           description: body.description ?? null,
         },
       });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       // Re-generate embedding in background
       generateAndStoreCandidateEmbedding(user.id).catch(() => {});
       return Response.json({ experience }, { status: 201 });
@@ -62,6 +69,13 @@ export async function PATCH(request: Request) {
           description: data.description ?? null,
         },
       });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       generateAndStoreCandidateEmbedding(user.id).catch(() => {});
       return Response.json({ experience });
     });
@@ -79,6 +93,13 @@ export async function DELETE(request: Request) {
       const id = searchParams.get('id');
       if (!id) return Response.json({ error: 'id query param required' }, { status: 400 });
       await prisma.candidateExperience.delete({ where: { id, candidateId: user.id } });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       generateAndStoreCandidateEmbedding(user.id).catch(() => {});
       return Response.json({ success: true });
     });

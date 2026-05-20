@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { typedApiClient } from '@/lib/api/client';
-import type { Application, ApplicationStatus, Job, User } from '@/generated/prisma';
+import type { Application, Job, User } from '@/generated/prisma';
 
 // API response types that extend Prisma types with relations
 type ApplicationWithRelations = Application & {
@@ -8,13 +8,7 @@ type ApplicationWithRelations = Application & {
   user?: Pick<User, 'id' | 'email' | 'role' | 'skills'>;
 };
 
-interface CreateApplicationRequest {
-  jobId: string;
-}
 
-interface UpdateApplicationRequest {
-  status?: ApplicationStatus;
-}
 
 interface ApplicationScore {
   applicationId: string;
@@ -54,5 +48,16 @@ export function useApplications() {
       const res = await typedApiClient.get<ApplicationWithRelations[]>('/applications');
       return res.data;
     },
+  });
+}
+
+export function useUserApplications(userId: string) {
+  return useQuery({
+    queryKey: ['applications', { userId }],
+    queryFn: async () => {
+      const res = await typedApiClient.get<ApplicationWithRelations[]>(`/applications?userId=${userId}`);
+      return res.data;
+    },
+    enabled: !!userId,
   });
 }

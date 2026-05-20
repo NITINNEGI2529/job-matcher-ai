@@ -36,6 +36,12 @@ export async function GET(
           role: true,
           domainId: true,
           createdAt: true,
+          skills: true,
+          resumeUrl: true,
+          yearsOfExperience: true,
+          experiences: true,
+          education: true,
+          certifications: true,
         },
       });
       

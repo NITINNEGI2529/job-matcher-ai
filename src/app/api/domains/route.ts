@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { requirePermission } from '@/lib/middleware/rbac';
 import { handleRouteError, ValidationError } from '@/lib/errors';
+import { successResponse } from '@/lib/api/response';
 
 /**
  * GET /api/domains
@@ -34,7 +35,7 @@ export async function GET() {
         },
       });
       
-      return Response.json({ domains });
+      return successResponse(domains);
     });
   } catch (error) {
     return handleRouteError(error);
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
         },
       });
       
-      return Response.json({ domain });
+      return successResponse(domain);
     });
   } catch (error) {
     return handleRouteError(error);

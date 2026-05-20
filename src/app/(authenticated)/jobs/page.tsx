@@ -53,7 +53,7 @@ function JobsListingContent() {
             candidateSkills,
             requiredSkills: job.requiredSkills,
           });
-          matchingScore = result.score;
+          matchingScore = Math.round(result.score * 100);
         }
 
         return {

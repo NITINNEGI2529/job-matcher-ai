@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, ValidationError, AuthorizationError, NotFoundError } from '@/lib/errors';
 import { Role } from '@/generated/prisma';
+import { successResponse } from '@/lib/api/response';
 
 /**
  * GET /api/jobs/[id]
@@ -51,7 +52,7 @@ export async function GET(
         }
       }
       
-      return Response.json({ job });
+      return successResponse(job);
     });
   } catch (error) {
     return handleRouteError(error);
@@ -186,7 +187,7 @@ export async function PATCH(
         },
       });
       
-      return Response.json({ job });
+      return successResponse(job);
     });
   } catch (error) {
     return handleRouteError(error);

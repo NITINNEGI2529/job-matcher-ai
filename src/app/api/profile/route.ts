@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, AuthorizationError, ValidationError } from '@/lib/errors';
-import { calculateMatchingScore } from '@/lib/matching';
 import { Role } from '@/generated/prisma';
 import { successResponse } from '@/lib/api/response';
 
@@ -65,30 +64,19 @@ export async function PATCH(request: Request) {
           data: { skills: trimmedSkills },
         });
 
-        // Fetch all user's applications with job details
-        const applications = await tx.application.findMany({
-          where: { userId: user.id },
-          include: {
-            job: { select: { requiredSkills: true } },
+        // Invalidate cached matching score & reasoning for all this user's applications that are not accepted
+        await tx.application.updateMany({
+          where: { 
+            userId: user.id,
+            status: { not: 'ACCEPTED' }
+          },
+          data: {
+            matchingScore: null,
+            aiReasoning: null,
           },
         });
 
-        // Recalculate matching scores for all applications
-        await Promise.all(
-          applications.map((application) => {
-            const matchingResult = calculateMatchingScore({
-              candidateSkills: trimmedSkills,
-              requiredSkills: application.job.requiredSkills,
-            });
-
-            return tx.application.update({
-              where: { id: application.id },
-              data: { matchingScore: matchingResult.score },
-            });
-          })
-        );
-
-        return applications.length;
+        return 1;
       });
 
       // Trigger embedding regeneration since skills changed

@@ -105,7 +105,7 @@ export async function generateAndStoreCandidateEmbedding(candidateId: string): P
     }
 
     const newHash = crypto.createHash('sha256').update(text).digest('hex');
-    
+
     if (user.profileHash === newHash) {
       console.log(`[embeddings] Profile unchanged for ${candidateId}, skipping embedding`);
       await prisma.user.update({
@@ -121,7 +121,7 @@ export async function generateAndStoreCandidateEmbedding(candidateId: string): P
     // Upsert using raw SQL (Prisma doesn't support vector type natively)
     await prisma.$executeRaw`
       INSERT INTO candidate_embeddings ("id", "candidateId", "embedding", "embeddingModel", "createdAt", "updatedAt")
-      VALUES (gen_random_uuid()::text, ${candidateId}, ${vectorString}::vector, 'text-embedding-004', NOW(), NOW())
+      VALUES (gen_random_uuid()::text, ${candidateId}, ${vectorString}::vector, 'gemini-embedding-2', NOW(), NOW())
       ON CONFLICT ("candidateId")
       DO UPDATE SET embedding = ${vectorString}::vector, "updatedAt" = NOW()
     `;
@@ -134,7 +134,7 @@ export async function generateAndStoreCandidateEmbedding(candidateId: string): P
     console.error(`[embeddings] Failed to generate candidate embedding for ${candidateId}:`, error);
     await prisma.user
       .update({ where: { id: candidateId }, data: { embeddingStatus: 'failed' } })
-      .catch(() => {});
+      .catch(() => { });
   }
 }
 
@@ -157,7 +157,7 @@ export async function generateAndStoreJobEmbedding(jobId: string): Promise<void>
 
     await prisma.$executeRaw`
       INSERT INTO job_embeddings ("id", "jobId", "embedding", "embeddingModel", "createdAt", "updatedAt")
-      VALUES (gen_random_uuid()::text, ${jobId}, ${vectorString}::vector, 'text-embedding-004', NOW(), NOW())
+      VALUES (gen_random_uuid()::text, ${jobId}, ${vectorString}::vector, 'gemini-embedding-2', NOW(), NOW())
       ON CONFLICT ("jobId")
       DO UPDATE SET embedding = ${vectorString}::vector, "updatedAt" = NOW()
     `;

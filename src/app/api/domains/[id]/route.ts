@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, NotFoundError, AuthorizationError, ValidationError } from '@/lib/errors';
 import { Role } from '@/generated/prisma';
+import { successResponse } from '@/lib/api/response';
 
 /**
  * GET /api/domains/[id]
@@ -46,7 +47,7 @@ export async function GET(
         throw new AuthorizationError('Insufficient permissions to access this domain');
       }
       
-      return Response.json({ domain });
+      return successResponse(domain);
     });
   } catch (error) {
     return handleRouteError(error);
@@ -137,7 +138,7 @@ export async function PATCH(
         },
       });
       
-      return Response.json({ domain });
+      return successResponse(domain);
     });
   } catch (error) {
     return handleRouteError(error);

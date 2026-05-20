@@ -17,6 +17,10 @@ apiClient.interceptors.request.use(
       return config;
     }
 
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     if (window.Clerk?.session) {
       try {
         const token = await window.Clerk.session.getToken();

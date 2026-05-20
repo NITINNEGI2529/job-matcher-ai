@@ -47,7 +47,7 @@ export function useUser(id: string) {
 
 export function useUpdateUser() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ id, ...userData }: UpdateUserRequest & { id: string }) => {
       const res = await typedApiClient.patch<User>(`/users/${id}`, userData);

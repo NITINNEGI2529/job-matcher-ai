@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { withDomainIsolation } from '@/lib/middleware/domainIsolation';
 import { handleRouteError, AuthorizationError, NotFoundError } from '@/lib/errors';
 import { Role } from '@/generated/prisma';
+import { successResponse } from '@/lib/api/response';
 
 /**
  * PATCH /api/domains/[id]/disable
@@ -60,7 +61,7 @@ export async function PATCH(
         },
       });
       
-      return Response.json({ domain: updatedDomain });
+      return successResponse(updatedDomain);
     });
   } catch (error) {
     return handleRouteError(error);

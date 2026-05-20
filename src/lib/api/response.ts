@@ -1,4 +1,4 @@
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T | null;
   error: ApiError | null;
   meta?: ApiMeta;
@@ -15,7 +15,7 @@ export interface ApiMeta {
   limit?: number;
   total?: number;
   totalPages?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

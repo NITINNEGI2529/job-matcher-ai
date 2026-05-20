@@ -79,8 +79,9 @@ export default function UploadJobsPage() {
       let jobs;
       try {
         jobs = parseCSV(text);
-      } catch (e: any) {
-        showErrorToast(`Failed to parse CSV: ${e.message}`);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        showErrorToast(`Failed to parse CSV: ${errorMsg}`);
         setIsUploading(false);
         return;
       }
@@ -99,7 +100,7 @@ export default function UploadJobsPage() {
         try {
           await apiClient.post('/jobs', jobs[i]);
           successCount++;
-        } catch (e) {
+        } catch {
           currErrorCount++;
         }
         setProgress(Math.round(((i + 1) / jobs.length) * 100));
@@ -117,7 +118,7 @@ export default function UploadJobsPage() {
       } else {
         showErrorToast(`${currErrorCount} job(s) failed to upload`);
       }
-    } catch (e: any) {
+    } catch {
       showErrorToast('An error occurred during upload');
     } finally {
       setIsUploading(false);

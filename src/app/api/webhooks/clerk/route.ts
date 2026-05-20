@@ -86,15 +86,32 @@ export async function POST(req: Request) {
         const role = (data.public_metadata?.role as Role) || 'CANDIDATE';
         const domainId = data.public_metadata?.domainId || null;
 
-        // Create user in database
-        await prisma.user.create({
-          data: {
-            id: clerkId, // Use Clerk ID as primary key
-            email,
-            role,
-            domainId,
-          },
+        // Check if user already exists by email (e.g. pre-provisioned super admin)
+        const existingUser = await prisma.user.findUnique({
+          where: { email }
         });
+
+        if (existingUser) {
+          await prisma.user.update({
+            where: { email },
+            data: {
+              id: clerkId, // Update dummy ID to real Clerk ID
+              // Keep existing role if they are pre-provisioned as SUPER_ADMIN
+              ...(existingUser.role !== 'SUPER_ADMIN' && role ? { role } : {}),
+              ...(domainId && { domainId })
+            }
+          });
+        } else {
+          // Create user in database
+          await prisma.user.create({
+            data: {
+              id: clerkId, // Use Clerk ID as primary key
+              email,
+              role,
+              domainId,
+            },
+          });
+        }
 
         console.log(`User created: ${email} with role ${role}, domainId: ${domainId}`);
         break;

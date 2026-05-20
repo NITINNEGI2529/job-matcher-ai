@@ -42,6 +42,13 @@ export async function POST(request: Request) {
         where: { id: user.id },
         data: { skills: allSkills.map((s) => s.name) },
       });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
+      });
       generateAndStoreCandidateEmbedding(user.id).catch(() => {});
       return Response.json({ skill }, { status: 201 });
     });
@@ -66,6 +73,13 @@ export async function DELETE(request: Request) {
       await prisma.user.update({
         where: { id: user.id },
         data: { skills: remaining.map((s) => s.name) },
+      });
+      await prisma.application.updateMany({
+        where: { 
+          userId: user.id,
+          status: { not: 'ACCEPTED' }
+        },
+        data: { matchingScore: null, aiReasoning: null },
       });
       generateAndStoreCandidateEmbedding(user.id).catch(() => {});
       return Response.json({ success: true });
