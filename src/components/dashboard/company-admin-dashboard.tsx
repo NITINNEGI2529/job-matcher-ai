@@ -186,7 +186,7 @@ export function CompanyAdminDashboard() {
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Link href="/jobs">
+                  <Link href="/jobs/manage">
                     <Briefcase className="mr-2 h-4 w-4" />
                     View Jobs
                   </Link>
@@ -248,7 +248,7 @@ export function CompanyAdminDashboard() {
                   </Link>
                 </Button>
                 <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/jobs">
+                  <Link href="/applications">
                     <FileText className="mr-2 h-4 w-4" />
                     Review Applications
                   </Link>

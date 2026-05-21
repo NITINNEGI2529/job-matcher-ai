@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { handleRouteError } from '@/lib/errors';
 import { Role } from '@/generated/prisma';
+import { getRoleForEmail } from '@/lib/admin-emails';
 
 // Clerk webhook event types
 type WebhookEvent = {
@@ -82,9 +83,10 @@ export async function POST(req: Request) {
 
     switch (type) {
       case 'user.created': {
-        // Get role and domainId from public_metadata (set by Clerk invitation)
-        const role = (data.public_metadata?.role as Role) || 'CANDIDATE';
-        const domainId = data.public_metadata?.domainId || null;
+        // ADMIN_EMAILS is the source of truth for platform admins.
+        // Otherwise, use Clerk invitation metadata and fall back to candidate.
+        const role = getRoleForEmail(email, data.public_metadata?.role as Role | undefined);
+        const domainId = role === Role.SUPER_ADMIN ? null : data.public_metadata?.domainId || null;
 
         // Check if user already exists by email (e.g. pre-provisioned super admin)
         const existingUser = await prisma.user.findUnique({
@@ -96,9 +98,8 @@ export async function POST(req: Request) {
             where: { email },
             data: {
               id: clerkId, // Update dummy ID to real Clerk ID
-              // Keep existing role if they are pre-provisioned as SUPER_ADMIN
-              ...(existingUser.role !== 'SUPER_ADMIN' && role ? { role } : {}),
-              ...(domainId && { domainId })
+              role,
+              domainId,
             }
           });
         } else {
@@ -118,16 +119,18 @@ export async function POST(req: Request) {
       }
 
       case 'user.updated': {
-        // Extract role and domainId from public_metadata
-        const role = data.public_metadata?.role as Role | undefined;
-        const domainId = data.public_metadata?.domainId;
+        // ADMIN_EMAILS is the source of truth for platform admins.
+        // Otherwise, keep using Clerk public metadata when present.
+        const metadataRole = data.public_metadata?.role as Role | undefined;
+        const role = getRoleForEmail(email, metadataRole);
+        const domainId = role === Role.SUPER_ADMIN ? null : data.public_metadata?.domainId;
 
         // Update user in database
         await prisma.user.update({
           where: { id: clerkId }, // Use Clerk ID directly
           data: {
             email,
-            ...(role && { role }),
+            role,
             ...(domainId !== undefined && { domainId: domainId || null }),
           },
         });

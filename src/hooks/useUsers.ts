@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/nextjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { typedApiClient } from '@/lib/api/client';
 import type { User, Role, Domain, CandidateExperience, CandidateEducation, CandidateCertification } from '@/generated/prisma';
@@ -15,33 +16,47 @@ export interface CurrentUser extends User {
 }
 
 export function useUsers() {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', userId],
     queryFn: async () => {
       const res = await typedApiClient.get<User[]>('/users');
       return res.data;
     },
+    enabled: isLoaded && !!userId,
   });
 }
 
 export function useCurrentUser() {
-  return useQuery({
-    queryKey: ['users', 'me'],
+  const { userId, isLoaded } = useAuth();
+
+  const query = useQuery({
+    queryKey: ['users', 'me', userId],
     queryFn: async () => {
       const res = await typedApiClient.get<CurrentUser>('/users/me');
       return res.data;
     },
+    enabled: isLoaded && !!userId,
   });
+
+  return {
+    ...query,
+    isLoading: !isLoaded || (!!userId && query.isLoading),
+    isPending: !isLoaded || query.isPending,
+  };
 }
 
 export function useUser(id: string) {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['users', id],
+    queryKey: ['users', userId, id],
     queryFn: async () => {
       const res = await typedApiClient.get<User>(`/users/${id}`);
       return res.data;
     },
-    enabled: !!id,
+    enabled: isLoaded && !!userId && !!id,
   });
 }
 

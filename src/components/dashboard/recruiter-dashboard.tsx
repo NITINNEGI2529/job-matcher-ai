@@ -162,7 +162,7 @@ export function RecruiterDashboard() {
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
-                  <Link href="/jobs">
+                  <Link href="/jobs/manage">
                     <Briefcase className="mr-2 h-4 w-4" />
                     View All Jobs
                   </Link>
@@ -184,7 +184,7 @@ export function RecruiterDashboard() {
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" className="w-full group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
-                  <Link href="/jobs">
+                  <Link href="/jobs/analytics">
                     <TrendingUp className="mr-2 h-4 w-4" />
                     View Analytics
                   </Link>
@@ -240,19 +240,19 @@ export function RecruiterDashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/jobs">
+                  <Link href="/applications?status=PENDING">
                     <Clock className="mr-2 h-4 w-4" />
                     Review Pending ({stats.pendingApplications})
                   </Link>
                 </Button>
                 <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/jobs">
+                  <Link href="/applications">
                     <FileText className="mr-2 h-4 w-4" />
                     View All Applications
                   </Link>
                 </Button>
                 <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/jobs">
+                  <Link href="/applications?status=ACCEPTED">
                     <CheckCircle className="mr-2 h-4 w-4" />
                     Accepted Candidates
                   </Link>

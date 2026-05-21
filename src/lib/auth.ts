@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { AuthenticationError } from '@/lib/errors';
 import { User } from '@/generated/prisma';
+import { isAdminEmail } from '@/lib/admin-emails';
 
 /**
  * Server-side authentication utility that validates Clerk session and fetches user from database.
@@ -38,13 +39,24 @@ export async function getAuthenticatedUser(): Promise<User> {
   }
   
   // Fetch user from database with domain relation (use Clerk ID directly)
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { id: userId }, // Use Clerk ID directly as primary key
     include: { domain: true },
   });
   
   if (!user) {
     throw new AuthenticationError('User not found in database');
+  }
+
+  if (isAdminEmail(user.email) && (user.role !== 'SUPER_ADMIN' || user.domainId !== null)) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        role: 'SUPER_ADMIN',
+        domainId: null,
+      },
+      include: { domain: true },
+    });
   }
   
   return user;

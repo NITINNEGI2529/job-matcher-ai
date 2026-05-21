@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { AuthenticationError, NotFoundError } from '@/lib/errors';
 import type { User, Domain } from '@/generated/prisma';
+import { isAdminEmail } from '@/lib/admin-emails';
 
 /**
  * User type with included domain relation
@@ -45,13 +46,24 @@ export async function withDomainIsolation<T>(
     throw new AuthenticationError('Unauthorized');
   }
   
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { id: userId }, // Use Clerk ID directly
     include: { domain: true },
   });
   
   if (!user) {
     throw new NotFoundError('User');
+  }
+
+  if (isAdminEmail(user.email) && (user.role !== 'SUPER_ADMIN' || user.domainId !== null)) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        role: 'SUPER_ADMIN',
+        domainId: null,
+      },
+      include: { domain: true },
+    });
   }
   
   return handler(user, user.domainId);

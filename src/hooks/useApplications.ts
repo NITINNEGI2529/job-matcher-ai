@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { typedApiClient } from '@/lib/api/client';
 import type { Application, Job, User } from '@/generated/prisma';
@@ -19,45 +20,54 @@ interface ApplicationScore {
 
 
 export function useApplication(id: string) {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['applications', id],
+    queryKey: ['applications', userId, id],
     queryFn: async () => {
       const res = await typedApiClient.get<ApplicationWithRelations>(`/applications/${id}`);
       return res.data;
     },
-    enabled: !!id,
+    enabled: isLoaded && !!userId && !!id,
   });
 }
 
 
 export function useApplicationScore(id: string) {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['applications', id, 'score'],
+    queryKey: ['applications', userId, id, 'score'],
     queryFn: async () => {
       const res = await typedApiClient.get<ApplicationScore>(`/applications/${id}/score`);
       return res.data;
     },
-    enabled: !!id,
+    enabled: isLoaded && !!userId && !!id,
   });
 }
 
 export function useApplications() {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['applications'],
+    queryKey: ['applications', userId],
     queryFn: async () => {
       const res = await typedApiClient.get<ApplicationWithRelations[]>('/applications');
       return res.data;
     },
+    enabled: isLoaded && !!userId,
   });
 }
 
 export function useUserApplications(userId: string) {
+  const { userId: currentUserId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['applications', { userId }],
+    queryKey: ['applications', currentUserId, { userId }],
     queryFn: async () => {
       const res = await typedApiClient.get<ApplicationWithRelations[]>(`/applications?userId=${userId}`);
       return res.data;
     },
-    enabled: !!userId,
+    enabled: isLoaded && !!currentUserId && !!userId,
   });
 }

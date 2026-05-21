@@ -11,8 +11,12 @@ import { useQuery } from '@tanstack/react-query';
 
 interface AIMatchResult {
   jobId: string;
-  score: number;
+  aiScore?: number;
+  score?: number;
+  skillScore?: number;
+  embeddingScore?: number | null;
   reasoning: string;
+  commonSkills?: string[];
   job: {
     id: string;
     title: string;
@@ -29,6 +33,18 @@ export default function AIMatchPage() {
       return (res.data.data?.matches || res.data.matches || []) as AIMatchResult[];
     },
   });
+
+  const getDisplayScore = (match: AIMatchResult) => {
+    const score = match.aiScore ?? match.score ?? match.skillScore ?? 0;
+    return Math.max(0, Math.min(100, Math.round(score)));
+  };
+
+  const getCompatibilityLabel = (score: number) => {
+    if (score >= 80) return 'Highly Compatible';
+    if (score >= 60) return 'Good Match';
+    if (score >= 40) return 'Partial Match';
+    return 'Needs Skill Gap Review';
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -88,21 +104,30 @@ export default function AIMatchPage() {
         </div>
       )}
 
-      {!loading && matches && matches.map((match) => (
+      {!loading && matches && matches.map((match) => {
+        const displayScore = getDisplayScore(match);
+        const compatibilityLabel = getCompatibilityLabel(displayScore);
+
+        return (
         <Card key={match.jobId} className="mb-6 overflow-hidden border-2 transition-all hover:border-purple-300">
           <div className="bg-purple-50/50 border-b p-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="bg-purple-100 text-purple-700 font-bold p-3 rounded-full text-lg shadow-sm border border-purple-200">
-                {match.score}%
+                {displayScore}%
               </div>
               <div>
                 <h4 className="font-semibold text-purple-900 leading-tight">AI Confidence Score</h4>
-                <p className="text-xs text-purple-700 mb-0">Powered by AI</p>
+                <p className="text-xs text-purple-700 mb-0">
+                  Resume analyzer score
+                  {match.embeddingScore !== null && match.embeddingScore !== undefined
+                    ? ` • ${Math.round(match.embeddingScore)}% semantic`
+                    : ''}
+                </p>
               </div>
             </div>
             
             <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
-              <CheckCircle2 className="w-3 h-3 mr-1" /> Highly Compatible
+              <CheckCircle2 className="w-3 h-3 mr-1" /> {compatibilityLabel}
             </Badge>
           </div>
           
@@ -115,6 +140,25 @@ export default function AIMatchPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border bg-muted/20 p-3">
+                <p className="text-xs text-muted-foreground">AI Score</p>
+                <p className="text-lg font-bold">{displayScore}%</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 p-3">
+                <p className="text-xs text-muted-foreground">Skill Match</p>
+                <p className="text-lg font-bold">{Math.round(match.skillScore ?? displayScore)}%</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 p-3">
+                <p className="text-xs text-muted-foreground">Resume Similarity</p>
+                <p className="text-lg font-bold">
+                  {match.embeddingScore !== null && match.embeddingScore !== undefined
+                    ? `${Math.round(match.embeddingScore)}%`
+                    : 'Pending'}
+                </p>
+              </div>
+            </div>
+
             <div className="p-4 bg-muted/30 rounded-lg text-sm border">
               <strong>AI Reasoning:</strong> <span className="text-muted-foreground">{match.reasoning}</span>
             </div>
@@ -131,7 +175,8 @@ export default function AIMatchPage() {
             </Button>
           </CardFooter>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }

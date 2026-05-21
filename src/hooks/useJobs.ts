@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { typedApiClient } from '@/lib/api/client';
 import type { Job, Application, User } from '@/generated/prisma';
@@ -17,8 +18,10 @@ export interface JobWithScore extends Job {
 }
 
 export function useJobs(domainId?: string, recommended?: boolean) {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['jobs', domainId, recommended],
+    queryKey: ['jobs', userId, domainId, recommended],
     queryFn: async () => {
       const params: Record<string, string> = {};
       if (domainId) params.domainId = domainId;
@@ -26,28 +29,33 @@ export function useJobs(domainId?: string, recommended?: boolean) {
       const res = await typedApiClient.get<JobWithScore[]>('/jobs', params);
       return res.data;
     },
+    enabled: isLoaded && !!userId,
   });
 }
 
 export function useJob(id: string) {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['jobs', id],
+    queryKey: ['jobs', userId, id],
     queryFn: async () => {
       const res = await typedApiClient.get<Job>(`/jobs/${id}`);
       return res.data;
     },
-    enabled: !!id,
+    enabled: isLoaded && !!userId && !!id,
   });
 }
 
 
 export function useJobApplications(jobId: string) {
+  const { userId, isLoaded } = useAuth();
+
   return useQuery({
-    queryKey: ['jobs', jobId, 'applications'],
+    queryKey: ['jobs', userId, jobId, 'applications'],
     queryFn: async () => {
       const res = await typedApiClient.get<ApplicationWithUser[]>(`/jobs/${jobId}/applications`);
       return res.data;
     },
-    enabled: !!jobId,
+    enabled: isLoaded && !!userId && !!jobId,
   });
 }

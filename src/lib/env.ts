@@ -7,6 +7,7 @@ const envSchema = z.object({
   CLERK_SECRET_KEY: z.string().min(1),
   CLERK_WEBHOOK_SECRET: z.string().min(1),
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
+  ADMIN_EMAILS: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   // AI providers — optional at startup, validated at usage
   GROQ_API_KEY: z.string().min(1).optional(),

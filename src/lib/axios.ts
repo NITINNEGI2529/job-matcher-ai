@@ -21,6 +21,8 @@ apiClient.interceptors.request.use(
       delete config.headers['Content-Type'];
     }
 
+    delete config.headers.Authorization;
+
     if (window.Clerk?.session) {
       try {
         const token = await window.Clerk.session.getToken();
